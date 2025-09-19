@@ -12,18 +12,17 @@
 
 ## 📋 Table of Contents
 
-- [About the Project](#about-the-project)
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Usage](#usage)
-- [Architecture](#architecture)
-- [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [Roadmap](#roadmap)
-- [Privacy & Security](#privacy--security)
-- [License](#license)
-- [Support](#support)
-- [Acknowledgments](#acknowledgments)
+- [About the Project](#🎯-about-the-project)
+- [Features](#✨-features)
+- [Usage](#💡-usage)
+- [Architecture](#🏗-architecture)
+- [API Documentation](#📖-api-documentation)
+- [Contributing](#🤝-contributing)
+- [Roadmap](#🗺-roadmap)
+- [Privacy & Security](#🔒-privacy--security)
+- [License](#📄-license)
+- [Support](#💬-support)
+- [Acknowledgments](#🙏-acknowledgments)
 
 ## 🎯 About the Project
 
@@ -187,4 +186,4 @@ This README was crafted using best practices and inspiration from:
 - **Open Source Standards**: [Open Source Guides](https://opensource.guide/) - Community-driven open source best practices
 - **GDPR Compliance**: [GDPR.eu](https://gdpr.eu/) - Official GDPR compliance guidelines
 
-[⬆ Back to top](#iocassistant)
+[⬆ Back to top](#ioceassistant)
