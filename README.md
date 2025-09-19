@@ -10,7 +10,7 @@
 [![Code of Conduct](https://img.shields.io/badge/code%20of-conduct-ff69b4.svg)](CONDUCT.md)
 [![Security Policy](https://img.shields.io/badge/security-policy-brightgreen.svg)](SECURITY.md)
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [About the Project](#about-the-project)
 - [Features](#features)
@@ -24,7 +24,7 @@
 - [Support](#support)
 - [Acknowledgments](#acknowledgments)
 
-## 🎯 About the Project
+## About the Project
 
 IOC.EAssistant is a sophisticated AI-powered chatbot solution specifically designed for educational institutions. It serves as an intelligent virtual assistant that helps students get instant answers to their most common questions about academic life, schedules, policies, and procedures.
 
@@ -38,20 +38,20 @@ The system leverages cutting-edge generative AI models combined with rule-based 
 - **Multilingual Support**: Breaks down language barriers for international students
 - **Cost-Effective**: Reduces operational costs while improving student satisfaction
 
-## ✨ Features
+## Features
 
-### 🎓 Academic Support
+### Academic Support
 
 - **Subject Information**: Detailed information about courses, prerequisites, and study plans
 - **Grade Inquiries**: Information about grading systems, evaluation criteria, and academic progress
 
-### 📚 Administrative Assistance
+### Administrative Assistance
 
 - **Policy Information**: Quick access to school rules, procedures, and regulations
 - **Documentation Help**: Guidance on required documents, forms, and applications
 - **Event Information**: Updates on school events, deadlines, and important announcements
 
-### 🤖 Technical Features
+### Technical Features
 
 - **Advanced NLP**: Natural language processing for better understanding of student queries
 - **Document Integration**: Seamless integration with internal FAQs and institutional documents
@@ -59,7 +59,7 @@ The system leverages cutting-edge generative AI models combined with rule-based 
 - **Multilingual Support**: Easily adaptable to English, Spanish, and other languages
 - **GDPR Compliance**: Full data privacy and protection in accordance with regulations
 
-## 💡 Usage
+## Usage
 
 ### For Students
 
@@ -74,17 +74,17 @@ The system leverages cutting-edge generative AI models combined with rule-based 
    - "How do I apply for a transcript?"
    - "What are the library opening hours?"
 
-## 🏗 Architecture
+## Architecture
 
 _Detailed architecture documentation coming soon_
 
-## 📖 API Documentation
+## API Documentation
 
 API documentation will be available at `/docs` endpoint once the system is running.
 
 _Full API documentation coming soon_
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions from the community! Here's how you can help:
 
@@ -127,11 +127,11 @@ We welcome contributions from the community! Here's how you can help:
 
 For more details, see our [Contributing Guide](CONTRIBUTING.md).
 
-## 🗺 Roadmap
+## Roadmap
 
 See the [open issues](https://github.com/Onededios/IOC.EAssistant/issues) for a full list of proposed features and known issues.
 
-## 🔒 Privacy & Security
+## Privacy & Security
 
 IOC.EAssistant takes data privacy and security seriously:
 
@@ -144,11 +144,11 @@ IOC.EAssistant takes data privacy and security seriously:
 
 For more information, see our [Privacy Policy](PRIVACY.md) and [Security Policy](SECURITY.md).
 
-## 📄 License
+## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 💬 Support
+## Support
 
 ### Getting Help
 
@@ -164,7 +164,7 @@ For direct support or collaboration inquiries:
 - [carlosOrz](https://github.com/carlosOrz)
 - [xujiongze](https://github.com/xujiongze)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Thanks to all contributors who have helped shape this project
 - Educational institutions that provided valuable feedback and requirements
@@ -174,7 +174,7 @@ For direct support or collaboration inquiries:
 
 _Made with ❤️ for the education community_
 
-## 📝 Documentation Sources & Inspiration
+## Documentation Sources & Inspiration
 
 This README was crafted using best practices and inspiration from:
 
