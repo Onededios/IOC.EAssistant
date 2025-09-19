@@ -35,7 +35,7 @@ We follow a responsible disclosure process. Please give us a reasonable amount o
 
 Thank you for helping us keep IOC.EAssistant secure!
 
-## 📝 Documentation Sources & Inspiration
+## Documentation Sources & Inspiration
 
 This security policy was developed following industry standards and best practices from:
 
@@ -54,5 +54,5 @@ This security policy was developed following industry standards and best practic
 - [Project Architecture](README.md#-architecture)
 - [Technology Stack](README.md#-technology-stack)
 - [Contributing Guidelines](CONTRIBUTING.md)
-- [Code of Conduct](CONDUCT.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Project License](LICENSE)

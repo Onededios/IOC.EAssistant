@@ -74,7 +74,7 @@ This Code of Conduct is adapted from the [Contributor Covenant](https://www.cont
 
 Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/diversity).
 
-## 📝 Documentation Sources & Inspiration
+## Documentation Sources & Inspiration
 
 This Code of Conduct was created using:
 

@@ -62,9 +62,9 @@ git push origin feature/your-feature-name
 
 ## Code of Conduct
 
-By participating, you agree to abide by our [Code of Conduct](CONDUCT.md).
+By participating, you agree to abide by our [Code of Conduct](CODE_OF_CODE_OF_CONDUCT.md).
 
-## 📝 Documentation Sources & Inspiration
+## Documentation Sources & Inspiration
 
 This contributing guide was developed using best practices from:
 

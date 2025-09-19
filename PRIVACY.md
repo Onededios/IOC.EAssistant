@@ -52,7 +52,7 @@ For privacy-related inquiries or to exercise your data rights, please contact:
 - **Data Protection Officer**: [Create GitHub Issue](https://github.com/Onededios/IOC.EAssistant/issues)
 - **Project Repository**: [IOC.EAssistant](https://github.com/Onededios/IOC.EAssistant)
 
-## 📝 Documentation Sources & Inspiration
+## Documentation Sources & Inspiration
 
 This privacy policy was developed using GDPR-compliant templates and best practices from:
 
@@ -69,6 +69,6 @@ This privacy policy was developed using GDPR-compliant templates and best practi
 
 - [Project README](README.md)
 - [Security Policy](SECURITY.md)
-- [Code of Conduct](CONDUCT.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Project License](LICENSE)
