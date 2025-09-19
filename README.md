@@ -12,17 +12,17 @@
 
 ## 📋 Table of Contents
 
-- [About the Project](#🎯-about-the-project)
-- [Features](#✨-features)
-- [Usage](#💡-usage)
-- [Architecture](#🏗-architecture)
-- [API Documentation](#📖-api-documentation)
-- [Contributing](#🤝-contributing)
-- [Roadmap](#🗺-roadmap)
-- [Privacy & Security](#🔒-privacy--security)
-- [License](#📄-license)
-- [Support](#💬-support)
-- [Acknowledgments](#🙏-acknowledgments)
+- [About the Project](#about-the-project)
+- [Features](#features)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [API Documentation](#api-documentation)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
+- [Privacy & Security](#privacy--security)
+- [License](#license)
+- [Support](#support)
+- [Acknowledgments](#acknowledgments)
 
 ## 🎯 About the Project
 
