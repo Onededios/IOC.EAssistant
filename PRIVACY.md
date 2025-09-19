@@ -45,13 +45,6 @@ We process personal data based on one or more of the following legal grounds:
 
 In the event of a data breach, affected users and relevant authorities will be notified promptly in accordance with GDPR requirements.
 
-## Contact Information
-
-For privacy-related inquiries or to exercise your data rights, please contact:
-
-- **Data Protection Officer**: [Create GitHub Issue](https://github.com/Onededios/IOC.EAssistant/issues)
-- **Project Repository**: [IOC.EAssistant](https://github.com/Onededios/IOC.EAssistant)
-
 ## Documentation Sources & Inspiration
 
 This privacy policy was developed using GDPR-compliant templates and best practices from:
