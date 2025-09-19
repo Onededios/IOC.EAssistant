@@ -86,46 +86,7 @@ _Full API documentation coming soon_
 
 ## Contributing
 
-We welcome contributions from the community! Here's how you can help:
-
-### Development Process
-
-1. **Fork the repository**
-2. **Create a feature branch**
-
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-
-3. **Make your changes**
-
-   - Follow the coding standards
-   - Add tests for new functionality
-   - Update documentation as needed
-
-4. **Commit your changes**
-
-   ```bash
-   git commit -m "Add amazing feature"
-   ```
-
-5. **Push to your branch**
-
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-
-6. **Open a Pull Request**
-
-### Contribution Guidelines
-
-- Follow the existing code style and conventions
-- Write clear, concise commit messages
-- Include tests for new features
-- Update documentation for any API changes
-- Ensure all tests pass before submitting
-
-For more details, see our [Contributing Guide](CONTRIBUTING.md).
+We welcome contributions from the community! See [our Contributing Guide](CONTRIBUTING.md) for detailed instructions on how to get involved.
 
 ## Roadmap
 
@@ -133,16 +94,7 @@ See the [open issues](https://github.com/Onededios/IOC.EAssistant/issues) for a 
 
 ## Privacy & Security
 
-IOC.EAssistant takes data privacy and security seriously:
-
-- **GDPR Compliance**: Full compliance with European data protection regulations
-- **Data Encryption**: All data is encrypted in transit and at rest
-- **Minimal Data Collection**: We only collect data necessary for functionality
-- **User Consent**: Clear consent mechanisms for data processing
-- **Data Retention**: Automatic deletion of personal data after specified periods
-- **Security Audits**: Regular security assessments and penetration testing
-
-For more information, see our [Privacy Policy](PRIVACY.md) and [Security Policy](SECURITY.md).
+IOC.EAssistant takes data privacy and security seriously. See our [Privacy Policy](PRIVACY.md) and [Security Policy](SECURITY.md).
 
 ## License
 
