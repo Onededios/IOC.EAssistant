@@ -1,6 +1,6 @@
 # IOC.EAssistant
 
-![IOC EAssistant Banner](assets/images/banner.png)
+![IOC EAssistant Banner](assets/images/banner.jpg)
 
 **AI-Powered Educational Assistant for IOC Visitors and Students**
 
