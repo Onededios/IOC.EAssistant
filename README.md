@@ -1,14 +1,32 @@
 # IOC.EAssistant
+<div align="center">
+  <img src="assets/images/banner.jpg" alt="IOC EAssistant Banner" height="200" />
+  <br /><br />
+  <strong>AI-Powered Educational Assistant for IOC Visitors and Students</strong>
+  <br /><br />
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" />
+  </a>
+  <a href="CONTRIBUTING.md">
+    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="Contributing" />
+  </a>
+  <a href="PRIVACY.md">
+    <img src="https://img.shields.io/badge/GDPR-compliant-green.svg" alt="GDPR compliant" />
+  </a>
+  <a href="CODE_OF_CONDUCT.md">
+    <img src="https://img.shields.io/badge/code%20of-conduct-ff69b4.svg" alt="Code of Conduct" />
+  </a>
+  <a href="SECURITY.md">
+    <img src="https://img.shields.io/badge/security-policy-brightgreen.svg" alt="Security Policy" />
+  </a>
+  <br /><br />
+  <p>
+    <em>
+      Welcome to IOC EAssistant, an AI-powered platform designed to enhance the educational experience for IOC visitors and students. Explore features, contribute, and join our community!
+    </em>
+  </p>
+</div>
 
-![IOC EAssistant Banner](assets/images/banner.png)
-
-**AI-Powered Educational Assistant for IOC Visitors and Students**
-
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
-[![GDPR Compliant](https://img.shields.io/badge/GDPR-compliant-green.svg)](PRIVACY.md)
-[![Code of Conduct](https://img.shields.io/badge/code%20of-conduct-ff69b4.svg)](CODE_OF_CONDUCT.md)
-[![Security Policy](https://img.shields.io/badge/security-policy-brightgreen.svg)](SECURITY.md)
 
 ## Table of Contents
 
