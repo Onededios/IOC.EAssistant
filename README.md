@@ -1,6 +1,6 @@
 # IOC.EAssistant
 <div align="center">
-  <img src="assets/images/banner.png" alt="IOC EAssistant Banner" height="200" />
+  <img src="assets/images/banner.jpg" alt="IOC EAssistant Banner" height="200" />
   <br /><br />
   <strong>AI-Powered Educational Assistant for IOC Visitors and Students</strong>
   <br /><br />
