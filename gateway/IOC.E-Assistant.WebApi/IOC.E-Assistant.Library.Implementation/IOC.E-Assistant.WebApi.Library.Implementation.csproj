@@ -2,9 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>IOC.E_Assistant.Library.Contracts</RootNamespace>
+    <RootNamespace>IOC.E_Assistant.Library.Implementation</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Extension\" />
+  </ItemGroup>
 
 </Project>

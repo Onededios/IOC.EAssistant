@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>IOC.E_Assistant.Library.Implementation</RootNamespace>
+    <RootNamespace>IOC.E_Assistant.WebApi.XCutting.Validation</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

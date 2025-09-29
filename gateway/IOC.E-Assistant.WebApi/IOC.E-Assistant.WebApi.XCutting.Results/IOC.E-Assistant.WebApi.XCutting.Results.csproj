@@ -2,9 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>IOC.E_Assistant.Infraestructure.Contracts</RootNamespace>
+    <RootNamespace>IOC.E_Assistant.WebApi.XCutting.Results</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
+  </ItemGroup>
 
 </Project>
