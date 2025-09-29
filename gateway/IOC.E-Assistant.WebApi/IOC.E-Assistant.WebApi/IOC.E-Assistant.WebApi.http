@@ -1,0 +1,6 @@
+@IOC.E_Assistant.WebApi_HostAddress = http://localhost:5114
+
+GET {{IOC.E_Assistant.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

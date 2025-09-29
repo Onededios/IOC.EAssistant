@@ -52,3 +52,7 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+/.vs
+/gateway/.vs
+/gateway/IOC.E-Assistant.WebApi/.vs/IOC.E-Assistant.WebApi/CopilotIndices/17.13.444.19527
+/gateway/IOC.E-Assistant.WebApi/.vs/IOC.E-Assistant.WebApi
