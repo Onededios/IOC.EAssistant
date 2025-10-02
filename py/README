@@ -1,0 +1,68 @@
+# IOC E-Assistant API
+
+> A powerful Flask-based API server featuring AI chat capabilities with vector database integration
+
+## Getting Started
+
+### Installation
+
+1. **Create and activate a virtual environment** (recommended):
+   ```bash
+   python -m venv venv
+   # On Windows
+   venv\Scripts\activate
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
+
+2. **Install required packages**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## Usage
+
+### Starting the Server
+
+Launch the Flask development server:
+
+```bash
+python web.py
+```
+
+Once the server is running, access the interactive API documentation at:
+
+```
+http://localhost:8000/apidocs/
+```
+
+---
+
+## Roadmap
+
+- [ ] **Analyze IOC web data** - Extract and process institutional data
+- [ ] **Develop web crawler** - Automated data collection system
+- [ ] **Data cleaning pipeline** - Standardize and validate collected data
+
+- [ ] **Prepare ML models** - Train and optimize AI models
+- [ ] **Setup vector database** - Implement efficient similarity search
+- [ ] **Performance optimization** - Enhance response times and accuracy
+
+- [ ] **Develop API methods** - Comprehensive endpoint implementation
+- [ ] **API documentation** - Complete OpenAPI/Swagger documentation
+- [ ] **Testing suite** - Unit and integration tests
+- [ ] **Production deployment** - Docker containerization and deployment
+
+---
+
+## Project Structure
+
+```
+py/
+├── web.py              # Flask application server
+├── requirements.txt    # Python dependencies
+├── data/              # Data storage and processing
+└── README.md          # This file
+```
