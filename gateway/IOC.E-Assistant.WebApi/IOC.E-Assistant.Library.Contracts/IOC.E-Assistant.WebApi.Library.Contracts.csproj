@@ -8,7 +8,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Folder Include="Entities\" />
+		<Folder Include="Rules\" />
+		<Folder Include="ValueObjects\" />
 		<Folder Include="Services\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\IOC.E-Assistant.Library.Implementation\IOC.E-Assistant.WebApi.Library.Implementation.csproj" />
 	</ItemGroup>
 
 </Project>

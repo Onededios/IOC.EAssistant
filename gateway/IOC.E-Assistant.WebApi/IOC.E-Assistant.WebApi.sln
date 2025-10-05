@@ -1,33 +1,39 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.Api", "IOC.E-Assistant.WebApi\IOC.E-Assistant.WebApi.Api.csproj", "{96F8FE96-3D62-40E8-91D7-95C1E3C4F9E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.Api", "IOC.E-Assistant.WebApi\IOC.E-Assistant.WebApi.Api.csproj", "{96F8FE96-3D62-40E8-91D7-95C1E3C4F9E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.Infrastructure.Implementation", "IOC.E-Assistant.Infraestructure.Implementation\IOC.E-Assistant.Infrastructure.Implementation.csproj", "{5A20303A-5DE4-41F7-94CF-B582F672160B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.Infrastructure.Implementation", "IOC.E-Assistant.Infraestructure.Implementation\IOC.E-Assistant.WebApi.Infrastructure.Implementation.csproj", "{5A20303A-5DE4-41F7-94CF-B582F672160B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.Infrastructure.Contracts", "IOC.E-Assistant.Infraestructure.Contracts\IOC.E-Assistant.WebApi.Infrastructure.Contracts.csproj", "{266967FA-C400-4388-8817-A7A15FC879B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.Infrastructure.Contracts", "IOC.E-Assistant.Infraestructure.Contracts\IOC.E-Assistant.WebApi.Infrastructure.Contracts.csproj", "{266967FA-C400-4388-8817-A7A15FC879B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.Library.Contracts", "IOC.E-Assistant.Library.Contracts\IOC.E-Assistant.WebApi.Library.Contracts.csproj", "{78F634D3-6D5D-4BA2-9D8E-C54C71B349E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.Library.Contracts", "IOC.E-Assistant.Library.Contracts\IOC.E-Assistant.WebApi.Library.Contracts.csproj", "{78F634D3-6D5D-4BA2-9D8E-C54C71B349E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.Library.Implementation", "IOC.E-Assistant.Library.Implementation\IOC.E-Assistant.WebApi.Library.Implementation.csproj", "{3E6003F3-8E41-4015-84AC-BA2839A24E41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.Library.Implementation", "IOC.E-Assistant.Library.Implementation\IOC.E-Assistant.WebApi.Library.Implementation.csproj", "{3E6003F3-8E41-4015-84AC-BA2839A24E41}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. App", "1. App", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Presentation", "1. Presentation", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Service", "2. Service", "{06FE89D0-D4DC-4027-80DA-639A551FC3B4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3 Domain", "3 Domain", "{06FE89D0-D4DC-4027-80DA-639A551FC3B4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Repository", "3. Repository", "{09300EE0-A9AE-4950-919F-BC76F0F93355}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Repository", "4. Repository", "{09300EE0-A9AE-4950-919F-BC76F0F93355}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. XCutting", "4. XCutting", "{18AE1A3D-306D-47CE-A2EE-AA802605531B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. XCutting", "5. XCutting", "{18AE1A3D-306D-47CE-A2EE-AA802605531B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.XCutting.Logging", "IOC.E-Assistant.WebApi.Logging\IOC.E-Assistant.WebApi.XCutting.Logging.csproj", "{68BE9264-2046-4159-84AC-53BA687EB389}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.XCutting.Logging", "IOC.E-Assistant.WebApi.Logging\IOC.E-Assistant.WebApi.XCutting.Logging.csproj", "{68BE9264-2046-4159-84AC-53BA687EB389}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.XCutting.Results", "IOC.E-Assistant.WebApi.XCutting.Results\IOC.E-Assistant.WebApi.XCutting.Results.csproj", "{605B2B4B-FBCB-4541-A34B-B901D88A729A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.XCutting.Results", "IOC.E-Assistant.WebApi.XCutting.Results\IOC.E-Assistant.WebApi.XCutting.Results.csproj", "{605B2B4B-FBCB-4541-A34B-B901D88A729A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.XCutting.Validation", "IOC.E-Assistant.WebApi.XCutting.Validation\IOC.E-Assistant.WebApi.XCutting.Validation.csproj", "{31D54C90-D65C-4D6E-828E-CADF663B53E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.XCutting.Validation", "IOC.E-Assistant.WebApi.XCutting.Validation\IOC.E-Assistant.WebApi.XCutting.Validation.csproj", "{31D54C90-D65C-4D6E-828E-CADF663B53E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.XCutting.Security", "IOC.E-Assistant.WebApi.XCutting.Security\IOC.E-Assistant.WebApi.XCutting.Security.csproj", "{0CD003F2-73C5-46E1-B422-17A6AA4EC9ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.XCutting.Security", "IOC.E-Assistant.WebApi.XCutting.Security\IOC.E-Assistant.WebApi.XCutting.Security.csproj", "{0CD003F2-73C5-46E1-B422-17A6AA4EC9ED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Application", "2. Application", "{C6838A4A-D8AD-4653-AEB9-2D5626DCEC5C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOC.E-Assistant.WebApi.Application.Contracts", "IOC.E-Assistant.WebApi.Application\IOC.E-Assistant.WebApi.Application.Contracts.csproj", "{D8C90AF1-7904-4B30-8199-68D81F324906}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.Application.Implementation", "IOC.E-Assistant.WebApi.Application.Implementation\IOC.E-Assistant.WebApi.Application.Implementation.csproj", "{EE39F357-C837-40A8-9374-75F111EB8F1B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +77,14 @@ Global
 		{0CD003F2-73C5-46E1-B422-17A6AA4EC9ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CD003F2-73C5-46E1-B422-17A6AA4EC9ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CD003F2-73C5-46E1-B422-17A6AA4EC9ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8C90AF1-7904-4B30-8199-68D81F324906}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8C90AF1-7904-4B30-8199-68D81F324906}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8C90AF1-7904-4B30-8199-68D81F324906}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8C90AF1-7904-4B30-8199-68D81F324906}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE39F357-C837-40A8-9374-75F111EB8F1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE39F357-C837-40A8-9374-75F111EB8F1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE39F357-C837-40A8-9374-75F111EB8F1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE39F357-C837-40A8-9374-75F111EB8F1B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +99,8 @@ Global
 		{605B2B4B-FBCB-4541-A34B-B901D88A729A} = {18AE1A3D-306D-47CE-A2EE-AA802605531B}
 		{31D54C90-D65C-4D6E-828E-CADF663B53E2} = {18AE1A3D-306D-47CE-A2EE-AA802605531B}
 		{0CD003F2-73C5-46E1-B422-17A6AA4EC9ED} = {18AE1A3D-306D-47CE-A2EE-AA802605531B}
+		{D8C90AF1-7904-4B30-8199-68D81F324906} = {C6838A4A-D8AD-4653-AEB9-2D5626DCEC5C}
+		{EE39F357-C837-40A8-9374-75F111EB8F1B} = {C6838A4A-D8AD-4653-AEB9-2D5626DCEC5C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B2E33BED-DC11-43F2-9CEE-D4BA2AABDE82}

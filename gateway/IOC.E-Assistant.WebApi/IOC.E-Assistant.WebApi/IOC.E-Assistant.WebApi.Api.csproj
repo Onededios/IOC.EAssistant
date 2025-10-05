@@ -16,7 +16,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\IOC.E-Assistant.WebApi.Application\IOC.E-Assistant.WebApi.Application.Contracts.csproj" />
 	  <ProjectReference Include="..\IOC.E-Assistant.WebApi.Logging\IOC.E-Assistant.WebApi.XCutting.Logging.csproj" />
+	  <ProjectReference Include="..\IOC.E-Assistant.WebApi.XCutting.Results\IOC.E-Assistant.WebApi.XCutting.Results.csproj" />
 	</ItemGroup>
 
 </Project>
