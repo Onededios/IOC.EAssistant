@@ -8,8 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Folder Include="Entities\" />
-		<Folder Include="Repositories\" />
+		<Folder Include="Proxy\Models\" />
 	</ItemGroup>
 
 </Project>
