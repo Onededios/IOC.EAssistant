@@ -1,2 +1,5 @@
 flask
 flasgger
+requests
+pytz
+playwright
