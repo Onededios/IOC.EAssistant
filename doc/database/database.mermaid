@@ -1,0 +1,40 @@
+---
+title: Database Schema
+---
+
+erDiagram
+    sessions {
+        UUID id PK
+        TIMESTAMP created_at
+    }
+
+    conversations {
+        UUID id PK
+        UUID session_id FK
+        VARCHAR title
+        TIMESTAMP created_at
+    }
+
+    questions {
+        UUID id PK
+        UUID conversation_id FK
+        TEXT question
+        INT index
+        INT token_count
+        JSONB metadata
+        TIMESTAMP created_at
+    }
+
+    answers {
+        UUID id PK
+        UUID question_id FK
+        TEXT answer
+        INT token_count
+        JSONB sources
+        JSONB metadata
+        TIMESTAMP created_at
+    }
+
+    sessions ||--o{ conversations: "has many"
+    conversations ||--o{ questions: "has many"
+    questions ||--|| answers: "has one"
