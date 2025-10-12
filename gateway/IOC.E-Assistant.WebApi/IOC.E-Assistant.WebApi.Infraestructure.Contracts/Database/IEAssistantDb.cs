@@ -1,12 +1,12 @@
-﻿using IOC.E_Assistant.Infraestructure.Contracts.NeonDB.Entities;
+﻿using IOC.E_Assistant.WebApi.Library.Models.Entities;
 
-namespace IOC.E_Assistant.Infraestructure.Contracts.Database;
+namespace IOC.E_Assistant.Infrastructure.Contracts.Database;
 public interface IEAssistantDb
 {
-    Task<Question> GetQuestion(Guid id);
-    Task<Answer> GetAnswer(Guid id);
-    Task<Session> GetSession(Guid id);
-    Task<int> SaveQuestion(Question question);
-    Task<int> SaveAnswer(Answer answer);
-    Task<int> SaveSession(Session session);
+    Task<Question> GetQuestionAsync(Guid id);
+    Task<Answer> GetAnswerAsync(Guid id);
+    Task<Session> GetSessionAsync(Guid id);
+    Task<int> SaveQuestionAsync(Question question);
+    Task<int> SaveAnswerAsync(Answer answer);
+    Task<int> SaveSessionAsync(Session session);
 }

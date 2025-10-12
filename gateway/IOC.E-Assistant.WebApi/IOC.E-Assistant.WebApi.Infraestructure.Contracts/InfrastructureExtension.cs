@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace IOC.E_Assistant.Infraestructure.Contracts;
 public static class InfrastructureExtension

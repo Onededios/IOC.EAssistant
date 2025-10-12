@@ -2,13 +2,18 @@
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
-		<RootNamespace>IOC.E_Assistant.Infraestructure.Contracts</RootNamespace>
+		<RootNamespace>IOC.E_Assistant.Infrastructure.Contracts</RootNamespace>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Folder Include="Proxy\Models\" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\IOC.E-Assistant.WebApi.Library.Entities\IOC.E-Assistant.WebApi.Library.Models.csproj" />
 	</ItemGroup>
 
 </Project>

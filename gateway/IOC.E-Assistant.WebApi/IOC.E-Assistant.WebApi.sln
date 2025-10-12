@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.Infr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.XCutting.Logging", "IOC.E-Assistant.WebApi.XCutting.Logging\IOC.E-Assistant.WebApi.XCutting.Logging.csproj", "{503AD7BB-C0B7-D408-8D25-4110BBBEE68E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.E-Assistant.WebApi.Library.Models", "IOC.E-Assistant.WebApi.Library.Entities\IOC.E-Assistant.WebApi.Library.Models.csproj", "{97A2E8F6-BFC1-487B-910E-1963354B4817}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{503AD7BB-C0B7-D408-8D25-4110BBBEE68E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{503AD7BB-C0B7-D408-8D25-4110BBBEE68E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{503AD7BB-C0B7-D408-8D25-4110BBBEE68E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97A2E8F6-BFC1-487B-910E-1963354B4817}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97A2E8F6-BFC1-487B-910E-1963354B4817}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97A2E8F6-BFC1-487B-910E-1963354B4817}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97A2E8F6-BFC1-487B-910E-1963354B4817}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,6 +107,7 @@ Global
 		{CA289103-1E36-3D72-1069-D41E62E7781A} = {09300EE0-A9AE-4950-919F-BC76F0F93355}
 		{E0C78CA7-652C-5833-C7CD-BCBE08544509} = {09300EE0-A9AE-4950-919F-BC76F0F93355}
 		{503AD7BB-C0B7-D408-8D25-4110BBBEE68E} = {18AE1A3D-306D-47CE-A2EE-AA802605531B}
+		{97A2E8F6-BFC1-487B-910E-1963354B4817} = {06FE89D0-D4DC-4027-80DA-639A551FC3B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B2E33BED-DC11-43F2-9CEE-D4BA2AABDE82}
