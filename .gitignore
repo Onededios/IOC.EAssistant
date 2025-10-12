@@ -51,4 +51,11 @@ CodeCoverage/
 # NUnit
 *.VisualState.xml
 TestResult.xml
-nunit-*.xml
+nunit-*.xmlnode_modules
+.vite
+coverage
+*.log
+*.tgz
+.DS_Store
+.env*
+dist
