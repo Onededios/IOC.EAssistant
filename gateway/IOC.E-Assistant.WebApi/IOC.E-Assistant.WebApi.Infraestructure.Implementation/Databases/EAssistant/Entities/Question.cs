@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
-namespace IOC.E_Assistant.Infraestructure.Contracts.NeonDB.Entities;
+namespace IOC.E_Assistant.Infraestructure.Implementation.Databases.EAssistant.Entities;
 public class Question : Entity
 {
     public Guid session_id { get; set; }

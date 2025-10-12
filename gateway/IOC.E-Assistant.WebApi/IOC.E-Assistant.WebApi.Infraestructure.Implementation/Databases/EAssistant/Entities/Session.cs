@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IOC.E_Assistant.Infraestructure.Contracts.NeonDB.Entities;
+namespace IOC.E_Assistant.Infraestructure.Implementation.Databases.EAssistant.Entities;
 public class Session : Entity
 {
     public DateTime expired_at { get; set; }

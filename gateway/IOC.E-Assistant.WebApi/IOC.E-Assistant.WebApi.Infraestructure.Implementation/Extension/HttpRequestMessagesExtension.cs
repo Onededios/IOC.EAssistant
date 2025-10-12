@@ -1,4 +1,4 @@
-﻿namespace IOC.E_Assistant.WebApi.Infrastructure.Implementation;
+﻿namespace IOC.E_Assistant.Infraestructure.Implementation.Extension;
 public static class HttpRequestMessagesExtension
 {
     public static HttpRequestMessage AddHeaders(this HttpRequestMessage request, Dictionary<string, string> headers)

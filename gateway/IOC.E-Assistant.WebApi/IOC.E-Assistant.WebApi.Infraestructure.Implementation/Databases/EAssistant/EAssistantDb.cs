@@ -1,9 +1,9 @@
 ﻿using Dapper;
 using IOC.E_Assistant.Infraestructure.Contracts.Database;
-using IOC.E_Assistant.Infraestructure.Contracts.NeonDB.Entities;
+using IOC.E_Assistant.Infraestructure.Implementation.Databases.EAssistant.Entities;
 using Microsoft.Extensions.Configuration;
 
-namespace IOC.E_Assistant.Infraestructure.Implementation.Databases;
+namespace IOC.E_Assistant.Infraestructure.Implementation.Databases.EAssistant;
 public class EAssistantDb : DapperContext, IEAssistantDb
 {
     public EAssistantDb(IConfiguration configuration) : base(configuration["EASSISTANT_CONNSTR"])
@@ -31,18 +31,18 @@ public class EAssistantDb : DapperContext, IEAssistantDb
     public Task<int> SaveAnswer(Answer answer)
     {
         var command = "INSERT INTO Answers (Id, QuestionId, Text, CreatedAt) VALUES (@Id, @QuestionId, @Text, @CreatedAt)";
-        return SaveAsync<Answer>(command, answer);
+        return SaveAsync(command, answer);
     }
 
     public Task<int> SaveQuestion(Question question)
     {
         var command = "INSERT INTO Questions (Id, SessionId, Text, CreatedAt) VALUES (@Id, @SessionId, @Text, @CreatedAt)";
-        return SaveAsync<Question>(command, question);
+        return SaveAsync(command, question);
     }
 
     public Task<int> SaveSession(Session session)
     {
         var command = "INSERT INTO Sessions (Id, UserId, StartedAt) VALUES (@Id, @UserId, @StartedAt)";
-        return SaveAsync<Session>(command, session);
+        return SaveAsync(command, session);
     }
 }
