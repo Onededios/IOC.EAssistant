@@ -212,7 +212,7 @@ if __name__ == "__main__":
             }
         ]
         
-        # sending with groiups via labels (entries with equilent labels will be in one stream)
+        # sending with groups via labels (entries with equilent labels will be in one stream)
         logger.send_batch(entries_with_metadata, group_by_labels=True)
         
     except Exception as e:
