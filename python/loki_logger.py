@@ -41,10 +41,11 @@ class LokiLogger:
         metadata: Optional[Dict[str, str]] = None
     ) -> List[str]:
         """Format a single stream entry"""
-        entry = [timestamp or self._get_timestamp_ns(), message]
         if metadata:
-            entry.append(json.dumps(metadata))
-        return entry
+            message_with_meta = f"{message} | {json.dumps(metadata)}"
+        else:
+            message_with_meta = message
+        return [timestamp or self._get_timestamp_ns(), message_with_meta]
 
     def send_log(
         self, 
