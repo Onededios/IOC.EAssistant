@@ -26,10 +26,13 @@ class WebCrawler:
             await self.browser.close()
         if self.playwright:
             await self.playwright.stop()
-        self.logger.send_log(
-            message="Browser closed",
-            labels={"job": "web_crawler", "event": "browser_closed"}
-        )
+        try:
+            self.logger.send_log(
+                message="Browser closed",
+                labels={"job": "web_crawler", "event": "browser_closed"}
+            )
+        except Exception as log_exc:
+            print(f"Logging failed during close: {log_exc}")
     
     async def init_browser(self):
         """ Initialize Playwright browser and page """
