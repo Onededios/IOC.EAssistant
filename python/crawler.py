@@ -57,12 +57,16 @@ class WebCrawler:
             
         except Exception as e:
             print(f"Error initializing browser: {e}")
-            self.logger.send_log(
-                message=f"Error initializing browser: {str(e)}",
-                labels={"job": "web_crawler", "event": "browser_init_error", "level": "error"},
-                metadata={"error": str(e)}
-            )
-            await self.close()
+            try:
+                self.logger.send_log(
+                    message=f"Error initializing browser: {str(e)}",
+                    labels={"job": "web_crawler", "event": "browser_init_error", "level": "error"},
+                    metadata={"error": str(e)}
+                )
+            except Exception as log_exc:
+                print(f"Logging failed: {log_exc}")
+            finally:
+                await self.close()
             raise
 
     async def parse_url(self, link, base_domain):
