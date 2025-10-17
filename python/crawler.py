@@ -15,7 +15,7 @@ class WebCrawler:
         self.playwright = None
         self.browser = None
         self.page = None
-        self.logger = LokiLogger("https://jiongzexu52.grafana.net", tenant_id="tenant1")
+        self.logger = LokiLogger()
 
 
     async def close(self):
@@ -59,8 +59,7 @@ class WebCrawler:
             print(f"Error initializing browser: {e}")
             self.logger.send_log(
                 message=f"Error initializing browser: {str(e)}",
-                labels={"job": "web_crawler", "event": "browser_init_error", "level": "error"},
-                metadata={"error": str(e)}
+                labels={"job": "web_crawler", "event": "browser_init_error", "level": "error"}
             )
             await self.close()
             raise
@@ -108,8 +107,7 @@ class WebCrawler:
         
         self.logger.send_log(
             message=f"Found {len(unique_urls)} general URLs",
-            labels={"job": "web_crawler", "event": "general_urls_extracted"},
-            metadata={"count": str(len(unique_urls))}
+            labels={"job": "web_crawler", "event": "general_urls_extracted"}
         )
         
         return unique_urls
@@ -120,8 +118,7 @@ class WebCrawler:
         
         self.logger.send_log(
             message=f"Starting extraction of noticias URLs (target: {num})",
-            labels={"job": "web_crawler", "event": "extract_noticias_urls"},
-            metadata={"target_count": str(num), "per_page": str(NUM_PER_PAGE)}
+            labels={"job": "web_crawler", "event": "extract_noticias_urls"}
         )
         
         for start in range(0, num, NUM_PER_PAGE):
@@ -140,8 +137,7 @@ class WebCrawler:
         
         self.logger.send_log(
             message=f"Finished extracting noticias URLs, total found: {len(noticias_urls)}",
-            labels={"job": "web_crawler", "event": "noticias_extraction_complete"},
-            metadata={"total_urls": str(len(noticias_urls))}
+            labels={"job": "web_crawler", "event": "noticias_extraction_complete"}
         )
         
         return noticias_urls
@@ -149,8 +145,7 @@ class WebCrawler:
     async def extract_page_content(self, page):
         self.logger.send_log(
             message=f"Starting content extraction for page: {page}",
-            labels={"job": "web_crawler", "event": "page_content_extraction"},
-            metadata={"url": page}
+            labels={"job": "web_crawler", "event": "page_content_extraction"}
         )
         
         await self.page.goto(page)
@@ -174,8 +169,7 @@ class WebCrawler:
         except Exception as e:
             self.logger.send_log(
                 message=f"Error saving content for page: {str(e)}",
-                labels={"job": "web_crawler", "event": "page_content_save_error", "level": "error"},
-                metadata={"url": page, "error": str(e)}
+                labels={"job": "web_crawler", "event": "page_content_save_error", "level": "error"}
             )
             
     async def crawl(self):
@@ -203,12 +197,7 @@ class WebCrawler:
             total_urls = len(self.urls_pool)
             self.logger.send_log(
                 message=f"Starting page crawling process with {total_urls} URLs in pool",
-                labels={"job": "web_crawler", "event": "crawl_loop_start"},
-                metadata={
-                    "total_urls": str(total_urls),
-                    "general_urls": str(len(general_urls)),
-                    "noticias_urls": str(len(noticias_urls))
-                }
+                labels={"job": "web_crawler", "event": "crawl_loop_start"}
             )
 
             processed_count = 0
@@ -222,12 +211,7 @@ class WebCrawler:
                 
                 self.logger.send_log(
                     message=f"Processing URL ({processed_count}/{total_urls}): {current_url}",
-                    labels={"job": "web_crawler", "event": "url_processing"},
-                    metadata={
-                        "url": current_url,
-                        "processed_count": str(processed_count),
-                        "total_count": str(total_urls)
-                    }
+                    labels={"job": "web_crawler", "event": "url_processing"}
                 )
                 
                 try:
@@ -248,24 +232,18 @@ class WebCrawler:
                     print(f"Error crawling {current_url}: {e}")
                     self.logger.send_log(
                         message=f"Error crawling URL: {str(e)}",
-                        labels={"job": "web_crawler", "event": "url_crawl_error", "level": "error"},
-                        metadata={"url": current_url, "error": str(e)}
+                        labels={"job": "web_crawler", "event": "url_crawl_error", "level": "error"}
                     )
             
             self.logger.send_log(
                 message=f"Web crawling session completed successfully. Processed {len(self.urls_visited)} pages",
-                labels={"job": "web_crawler", "event": "crawl_complete"},
-                metadata={
-                    "pages_processed": str(len(self.urls_visited)),
-                    "total_urls_found": str(len(self.urls_visited) + len(self.urls_pool))
-                }
+                labels={"job": "web_crawler", "event": "crawl_complete"}
             )
                 
         except Exception as e:
             self.logger.send_log(
                 message=f"Critical error during crawling session: {str(e)}",
-                labels={"job": "web_crawler", "event": "crawl_critical_error", "level": "error"},
-                metadata={"error": str(e)}
+                labels={"job": "web_crawler", "event": "crawl_critical_error", "level": "error"}
             )
             raise
         finally:
@@ -285,8 +263,7 @@ async def main():
         print(f"Error during crawling: {e}")
         crawler.logger.send_log(
             message=f"Main function failed: {str(e)}",
-            labels={"job": "web_crawler", "event": "main_error", "level": "error"},
-            metadata={"error": str(e)}
+            labels={"job": "web_crawler", "event": "main_error", "level": "error"}
         )
         await crawler.close()
         raise
