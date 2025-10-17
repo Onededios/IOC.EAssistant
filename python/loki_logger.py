@@ -104,16 +104,56 @@ if __name__ == "__main__":
     logger = LokiLogger()
     
     try:
-        # sending with groups via labels (entries with equivalent labels will be in one stream)
-        logger.send_log(
-            message="This is my log line",
-            labels={
-                "job": "test",
-                "environment": "debug",
-                "level": "info"
+        # Example 1: Simple batch of logs with different labels
+        entries = [
+            {
+                "message": "User login successful",
+                "labels": {
+                    "job": "auth_service",
+                    "environment": "production",
+                    "level": "info"
+                }
+            },
+            {
+                "message": "Database query completed",
+                "labels": {
+                    "job": "db_service",
+                    "environment": "production",
+                    "level": "info"
+                }
             }
-            
-        )
+        ]
+        
+        logger.send_batch(entries)
+        
+        # Example 2: Batch with metadata and custom timestamps
+        entries_with_metadata = [
+            {
+                "message": "API request failed",
+                "labels": {
+                    "job": "api_service",
+                    "level": "error"
+                },
+                "metadata": {
+                    "trace_id": "0242ac120002",
+                    "user_id": "12345"
+                },
+                "timestamp": "1645123456000000000"  # Optional custom timestamp
+            },
+            {
+                "message": "Cache miss",
+                "labels": {
+                    "job": "api_service",
+                    "level": "warn"
+                },
+                "metadata": {
+                    "cache_key": "user:12345"
+                }
+            }
+        ]
+        
+        # sending with groiups via labels (entries with equilent labels will be in one stream)
+        logger.send_batch(entries_with_metadata, group_by_labels=True)
         
     except Exception as e:
         print(f"Error: {e}")
