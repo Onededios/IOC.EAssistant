@@ -2,7 +2,7 @@ import requests
 import json
 from datetime import datetime
 import pytz
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 import logging
 from collections import defaultdict
 
