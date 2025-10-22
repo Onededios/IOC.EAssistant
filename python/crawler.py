@@ -50,13 +50,26 @@ class WebCrawler:
             await self.page.wait_for_load_state('networkidle')
 
             if self.page.url != self.start_url:
-                while self.page.url != self.start_url:
-                    await asyncio.sleep(1)
-                print("Captcha solved, continuing...")
-                self.logger.send_log(
-                    message="Captcha solved successfully",
-                    labels={"job": "web_crawler", "event": "captcha_solved"}
-                )
+                async def wait_for_start_url(timeout_url, check_interval=1):
+                    while self.page.url != timeout_url:
+                        await asyncio.sleep(check_interval)
+                try:
+                    # Wait up to 120 seconds for navigation back to start_url
+                    await asyncio.wait_for(wait_for_start_url(self.start_url), timeout=120)
+                    print("Captcha solved, continuing...")
+                    self.logger.send_log(
+                        message="Captcha solved successfully",
+                        labels={"job": "web_crawler", "event": "captcha_solved"}
+                    )
+                except asyncio.TimeoutError:
+                    error_msg = f"Timeout waiting for navigation back to {self.start_url} after captcha."
+                    print(error_msg)
+                    self.logger.send_log(
+                        message=error_msg,
+                        labels={"job": "web_crawler", "event": "captcha_timeout", "level": "error"}
+                    )
+                    await self.close()
+                    raise RuntimeError(error_msg)
             
         except Exception as e:
             print(f"Error initializing browser: {e}")
