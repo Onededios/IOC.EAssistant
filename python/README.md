@@ -50,7 +50,7 @@ Before using the Loki logger, you need to configure your Loki server credentials
 
 1. Copy the example configuration file:
    ```bash
-   cp loki_config.py.example loki_config.py
+   cp loki_config.example.py loki_config.py
    ```
 
 2. Edit `loki_config.py` with your Loki server details:
