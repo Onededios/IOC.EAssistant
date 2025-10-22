@@ -1,6 +1,6 @@
 import requests
 import json
-from datetime import datetime, time
+from datetime import datetime
 import pytz
 from typing import Dict, List, Optional, Union
 import logging
