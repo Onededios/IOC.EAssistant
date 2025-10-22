@@ -129,7 +129,7 @@ python web.py
 python/
 ├── crawler.py              # Web crawler for IOC education portal
 ├── loki_logger.py          # Loki logging integration
-├── loki_config.py.example  # Example configuration file
+├── loki_config.example.py  # Example configuration file
 ├── web.py                  # Web API server
 ├── requirements.txt        # Python dependencies
 ├── data/                   # Crawled data storage (JSON files)
