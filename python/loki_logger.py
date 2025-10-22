@@ -4,7 +4,6 @@ from datetime import datetime
 import pytz
 from typing import Dict, List, Optional
 import logging
-from collections import defaultdict
 
 try:
     from loki_config import LOKI_URL, USER_ID, API_KEY
