@@ -1,0 +1,4 @@
+# Loki Configuration
+LOKI_URL = ""
+USER_ID = ""
+API_KEY = ""

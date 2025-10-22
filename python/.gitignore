@@ -51,3 +51,5 @@ docs/_build/
 
 # Crawled data
 data/
+# Loki config
+python/loki_config.py
