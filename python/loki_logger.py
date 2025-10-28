@@ -4,14 +4,16 @@ from datetime import datetime
 import pytz
 from typing import Dict, List, Optional
 import logging
+import os
+from dotenv import load_dotenv
 
-try:
-    from loki_config import LOKI_URL, USER_ID, API_KEY
-except ImportError:
-    logging.warning("loki_config.py not found. Please create it from loki_config.example.py")
-    LOKI_URL = None
-    USER_ID = None
-    API_KEY = None
+# Load environment variables from .env file
+load_dotenv()
+
+# Get Loki configuration from environment variables
+LOKI_URL = os.getenv('LOKI_URL')
+USER_ID = os.getenv('LOKI_USER_ID')
+API_KEY = os.getenv('LOKI_API_KEY')
 
 class LokiLogger:
     def __init__(
