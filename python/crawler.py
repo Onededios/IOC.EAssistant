@@ -173,7 +173,8 @@ class WebCrawler:
         
         page_data = {
             "title": title_text,
-            "content": content_text
+            "content": content_text,
+            "type": "noticia" if "latest-news" in page else "general",
         }
         
         os.makedirs("data", exist_ok=True)
