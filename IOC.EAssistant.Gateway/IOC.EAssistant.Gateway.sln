@@ -25,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "9. Cross", "9. Cross", "{B6
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.EAssistant.Gateway.Library.Entities", "IOC.EAssistant.Gateway.Library.Entities\IOC.EAssistant.Gateway.Library.Entities.csproj", "{13B10716-3EBF-F0AB-935D-532D2EC6DC94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.EAssistant.Gateway.Results", "IOC.EAssistant.Gateway.Results\IOC.EAssistant.Gateway.Results.csproj", "{6D4F05BE-AC77-4E5E-A180-23A4EB54A1DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{13B10716-3EBF-F0AB-935D-532D2EC6DC94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13B10716-3EBF-F0AB-935D-532D2EC6DC94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13B10716-3EBF-F0AB-935D-532D2EC6DC94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D4F05BE-AC77-4E5E-A180-23A4EB54A1DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D4F05BE-AC77-4E5E-A180-23A4EB54A1DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D4F05BE-AC77-4E5E-A180-23A4EB54A1DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D4F05BE-AC77-4E5E-A180-23A4EB54A1DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -71,6 +77,7 @@ Global
 		{291D5A67-B1AE-4381-0D3D-F1BBE661F638} = {107ECBC9-754A-4421-B335-DAA72BDD5626}
 		{E378DCEF-C760-7FB1-31ED-9FAA985F7DE4} = {B6504E79-386F-4FA8-8B2F-5A035954F972}
 		{13B10716-3EBF-F0AB-935D-532D2EC6DC94} = {107ECBC9-754A-4421-B335-DAA72BDD5626}
+		{6D4F05BE-AC77-4E5E-A180-23A4EB54A1DB} = {B6504E79-386F-4FA8-8B2F-5A035954F972}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D17BD7B4-BC98-44FC-AC37-46965B584013}

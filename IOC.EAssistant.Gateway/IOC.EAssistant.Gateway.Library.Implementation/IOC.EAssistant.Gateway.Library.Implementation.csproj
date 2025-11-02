@@ -10,4 +10,8 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\IOC.EAssistant.Gateway.Library.Contracts\IOC.EAssistant.Gateway.Library.Contracts.csproj" />
+	</ItemGroup>
+
 </Project>

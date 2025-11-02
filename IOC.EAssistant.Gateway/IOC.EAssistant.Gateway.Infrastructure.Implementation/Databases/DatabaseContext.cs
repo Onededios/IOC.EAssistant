@@ -5,7 +5,7 @@ namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases;
 public abstract class DatabaseContext
 {
     private readonly string connectionString;
-    protected DatabaseContext(string connectionString)
+    protected DatabaseContext(string? connectionString)
     {
         if (string.IsNullOrEmpty(connectionString))
             throw new ArgumentNullException(nameof(connectionString), "Connection string cannot be null or empty.");
@@ -16,8 +16,7 @@ public abstract class DatabaseContext
     {
         using (var conn = CreateConnection())
         {
-            var res = await conn.QueryFirstOrDefaultAsync<T>(command, new { id });
-            if (res == null) throw new KeyNotFoundException($"{typeof(T).Name} with id {id} not found.");
+            var res = await conn.QueryFirstOrDefaultAsync<T>(command, new { id }) ?? throw new KeyNotFoundException($"{typeof(T).Name} with id {id} not found.");
             return res;
         }
     }
@@ -26,7 +25,8 @@ public abstract class DatabaseContext
     {
         using (var conn = CreateConnection())
         {
-            return await conn.ExecuteAsync(command, item);
+            var res = await conn.ExecuteAsync(command, item);
+            return res;
         }
     }
 

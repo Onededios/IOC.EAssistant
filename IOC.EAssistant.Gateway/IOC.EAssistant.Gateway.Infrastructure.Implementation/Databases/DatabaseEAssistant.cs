@@ -2,7 +2,7 @@
 using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases;
-public class DatabaseEAssistant(string connectionString) : DatabaseContext(connectionString), IDatabaseEAssistant
+public class DatabaseEAssistant(string? connectionString) : DatabaseContext(connectionString), IDatabaseEAssistant
 {
     public async Task<Answer> GetAnswerAsync(Guid id)
     {

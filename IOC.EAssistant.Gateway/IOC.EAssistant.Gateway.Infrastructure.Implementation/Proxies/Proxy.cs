@@ -7,8 +7,10 @@ namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Proxies;
 public abstract class Proxy
 {
     private readonly Uri _uri;
-    protected Proxy(string baseUri)
+    protected Proxy(string? baseUri)
     {
+        if (string.IsNullOrEmpty(baseUri))
+            throw new ArgumentNullException(nameof(baseUri), "Base uri string cannot be null or empty.");
         this._uri = new Uri(baseUri);
     }
 

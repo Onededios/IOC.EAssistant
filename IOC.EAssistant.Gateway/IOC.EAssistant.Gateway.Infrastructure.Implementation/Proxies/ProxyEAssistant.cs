@@ -2,7 +2,7 @@
 using IOC.EAssistant.Gateway.Infrastructure.Contracts.Proxies;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Proxies;
-public class EAssistantProxy(string baseUri) : Proxy(baseUri), IProxyEAssistant
+public class ProxyEAssistant(string? baseUri) : Proxy(baseUri), IProxyEAssistant
 {
     public async Task<ChatResponse> ChatAsync(ChatRequest body)
     {
