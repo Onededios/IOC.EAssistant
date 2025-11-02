@@ -2,6 +2,6 @@
 using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 
 namespace IOC.EAssistant.Gateway.Library.Implementation.Services;
-public class ServiceConversation : ServiceBase<Conversation>, IServiceConversation
+public class ServiceAnswer : ServiceBase<Answer>, IServiceAnswer
 {
 }

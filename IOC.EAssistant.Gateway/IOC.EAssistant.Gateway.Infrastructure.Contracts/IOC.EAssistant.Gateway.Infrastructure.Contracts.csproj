@@ -7,6 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Dapper.SimpleSqlBuilder" Version="4.2.3" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\IOC.EAssistant.Gateway.Library.Entities\IOC.EAssistant.Gateway.Library.Entities.csproj" />
 	</ItemGroup>
 

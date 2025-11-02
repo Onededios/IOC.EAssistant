@@ -2,5 +2,6 @@
 public class ChatResponse
 {
     public IEnumerable<Choice>? Choices { get; set; }
+    public Usage Usage { get; set; } = new Usage();
 }
 

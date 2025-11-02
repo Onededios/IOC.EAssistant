@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\IOC.EAssistant.Gateway.Library.Entities\IOC.EAssistant.Gateway.Library.Entities.csproj" />
+    <ProjectReference Include="..\IOC.EAssistant.Gateway.XCutting.Result\IOC.EAssistant.Gateway.XCutting.Result.csproj" />
+  </ItemGroup>
+
 </Project>

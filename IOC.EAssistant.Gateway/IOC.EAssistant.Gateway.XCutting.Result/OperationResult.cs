@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
-namespace IOC.EAssistant.Gateway.Results;
+namespace IOC.EAssistant.Gateway.XCutting.Results;
 public class OperationResult
 {
     public int Status { get; set; }

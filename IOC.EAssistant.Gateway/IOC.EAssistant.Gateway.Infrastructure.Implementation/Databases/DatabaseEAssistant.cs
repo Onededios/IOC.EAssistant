@@ -1,5 +1,6 @@
 ﻿using IOC.EAssistant.Gateway.Infrastructure.Contracts.Databases;
 using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
+using Dapper.SimpleSqlBuilder;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases;
 public class DatabaseEAssistant(string? connectionString) : DatabaseContext(connectionString), IDatabaseEAssistant
@@ -36,7 +37,7 @@ public class DatabaseEAssistant(string? connectionString) : DatabaseContext(conn
 
     public async Task<int> SaveSessionAsync(Session session)
     {
-        var command = "INSERT INTO Sessions (Id, UserId, StartedAt) VALUES (@Id, @UserId, @StartedAt)";
+        var command = "INSERT INTO Sessions (Id, StartedAt) VALUES (@Id, @StartedAt)";
         return await SaveAsync(command, session);
     }
 }

@@ -4,6 +4,7 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>a0bb30f3-e735-427b-b15b-795a65f50033</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,6 +23,7 @@
 		<ProjectReference Include="..\IOC.EAssistant.Gateway.Infrastructure.Implementation\IOC.EAssistant.Gateway.Infrastructure.Implementation.csproj" />
 		<ProjectReference Include="..\IOC.EAssistant.Gateway.Library.Implementation\IOC.EAssistant.Gateway.Library.Implementation.csproj" />
 		<ProjectReference Include="..\IOC.EAssistant.Gateway.XCutting.Logging\IOC.EAssistant.Gateway.XCutting.Logging.csproj" />
+		<ProjectReference Include="..\IOC.EAssistant.Gateway.XCutting.Result\IOC.EAssistant.Gateway.XCutting.Result.csproj" />
 	</ItemGroup>
 
 </Project>
