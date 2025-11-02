@@ -59,3 +59,4 @@ nunit-*.xml
 /IOC.EAssistant.Gateway/.vs/IOC.EAssistant.Gateway/CopilotIndices
 /IOC.EAssistant.Gateway/.vs/IOC.EAssistant.Gateway
 *.user
+/IOC.EAssistant.Gateway/.vs/ProjectEvaluation
