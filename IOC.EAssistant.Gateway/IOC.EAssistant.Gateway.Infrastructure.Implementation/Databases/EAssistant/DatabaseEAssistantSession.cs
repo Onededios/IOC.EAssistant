@@ -13,7 +13,7 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
         return await PersistAsync(builder);
     }
 
-    public override async Task<Session> GetAsync(Guid id)
+    public override async Task<Session?> GetAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
             .Select($"*")
@@ -32,6 +32,20 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
             .InsertInto($"sessions")
             .Columns($"id, created_at")
             .Values($"{item.id}, {item.created_at}");
+
+        return await PersistAsync(builder);
+    }
+
+    public override async Task<int> SaveMultipleAsync(IEnumerable<Session> items)
+    {
+        var builder = SimpleBuilder.CreateFluent()
+            .InsertInto($"sessions")
+            .Columns($"id, created_at");
+
+        foreach (var item in items)
+        {
+            builder.Values($"{item.id}, {item.created_at}");
+        }
 
         return await PersistAsync(builder);
     }

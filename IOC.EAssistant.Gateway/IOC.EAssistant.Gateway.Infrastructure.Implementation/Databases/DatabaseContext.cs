@@ -5,19 +5,19 @@ using Npgsql;
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases;
 public abstract class DatabaseContext<T>
 {
-    private readonly string connectionString;
+    private readonly string _connectionString;
     protected DatabaseContext(string? connectionString)
     {
         if (string.IsNullOrEmpty(connectionString))
             throw new ArgumentNullException(nameof(connectionString), "Connection string cannot be null or empty.");
-        this.connectionString = connectionString;
+        _connectionString = connectionString;
     }
 
-    protected async Task<T> GetFirstByIdAsync(IFluentSqlBuilder command)
+    protected async Task<T?> GetFirstByIdAsync(IFluentSqlBuilder command)
     {
         using (var conn = CreateConnection())
         {
-            var res = await conn.QueryFirstAsync<T>(command.Sql, command.Parameters);
+            var res = await conn.QueryFirstOrDefaultAsync<T?>(command.Sql, command.Parameters);
             return res;
         }
     }
@@ -40,5 +40,5 @@ public abstract class DatabaseContext<T>
         }
     }
 
-    protected NpgsqlConnection CreateConnection() => new NpgsqlConnection(connectionString);
+    protected NpgsqlConnection CreateConnection() => new NpgsqlConnection(_connectionString);
 }

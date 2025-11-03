@@ -7,13 +7,9 @@ public class OperationResult
     public int Status { get; set; }
     public string Instance { get; set; } = string.Empty;
     public OperationResult() => ErrorList = new List<ErrorResult>();
-    [JsonIgnore]
     public List<ErrorResult> ErrorList { get; }
-    public List<string> Errors => [.. ErrorList.Select(e => e.Message)];
-    [JsonIgnore]
     public bool HasErrors => ErrorList.Any();
-    [JsonIgnore]
-    public bool HasExceptions => ErrorList.Exists(x => x.Exception != null);
+    public bool HasExceptions => ErrorList.Exists(x => x.ExceptionMessage != null);
 }
 
 public class OperationResult<TResult> : OperationResult
@@ -51,23 +47,23 @@ public class OperationResult<TResult> : OperationResult
         return this;
     }
 
-    public ActionResult ToActionResult(ControllerBase controller)
+    public ActionResult<T> ToActionResult<T>(ControllerBase controller)
     {
         Instance = controller.HttpContext.Request.Path;
 
-        if (HasExceptions) return GetServerError(controller);
-        else if (HasErrors) return GetBadRequest(controller);
+        if (HasExceptions) return GetServerError<T>(controller);
+        else if (HasErrors) return GetBadRequest<T>(controller);
         Status = 200;
         return controller.Ok(this);
     }
 
-    public ActionResult GetBadRequest(ControllerBase controller)
+    public ActionResult<T> GetBadRequest<T>(ControllerBase controller)
     {
         Status = 400;
         return controller.BadRequest(this);
     }
 
-    public ActionResult GetServerError(ControllerBase controller)
+    public ActionResult<T> GetServerError<T>(ControllerBase controller)
     {
         Status = 500;
         return controller.StatusCode(500, this);

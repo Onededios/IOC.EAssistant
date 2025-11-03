@@ -13,7 +13,7 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
         return await PersistAsync(builder);
     }
 
-    public override async Task<Question> GetAsync(Guid id)
+    public override async Task<Question?> GetAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
             .Select($"*")
@@ -30,6 +30,20 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
             .InsertInto($"questions")
             .Columns($"id, created_at, question, token_count, metadata, conversation_id")
             .Values($"{item.id}, {item.created_at}, {item.question}, {item.token_count}, {item.metadata}, {item.conversation_id}");
+
+        return await PersistAsync(builder);
+    }
+
+    public override async Task<int> SaveMultipleAsync(IEnumerable<Question> items)
+    {
+        var builder = SimpleBuilder.CreateFluent()
+            .InsertInto($"questions")
+            .Columns($"id, created_at, question, token_count, metadata, conversation_id");
+
+        foreach (var item in items)
+        {
+            builder.Values($"{item.id}, {item.created_at}, {item.question}, {item.token_count}, {item.metadata}, {item.conversation_id}");
+        }
 
         return await PersistAsync(builder);
     }

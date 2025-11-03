@@ -11,6 +11,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\IOC.EAssistant.Gateway.Infrastructure.Contracts\IOC.EAssistant.Gateway.Infrastructure.Contracts.csproj" />
 	  <ProjectReference Include="..\IOC.EAssistant.Gateway.Library.Contracts\IOC.EAssistant.Gateway.Library.Contracts.csproj" />
 	</ItemGroup>
 

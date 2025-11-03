@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.EAssistant.Gateway.Libr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOC.EAssistant.Gateway.XCutting.Logging", "IOC.EAssistant.Gateway.XCutting.Logging\IOC.EAssistant.Gateway.XCutting.Logging.csproj", "{E378DCEF-C760-7FB1-31ED-9FAA985F7DE4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Application", "1. Application", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Presentation", "1. Presentation", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Domain", "2. Domain", "{107ECBC9-754A-4421-B335-DAA72BDD5626}"
 EndProject
