@@ -1,8 +1,9 @@
 ﻿using Dapper;
+using Dapper.SimpleSqlBuilder.FluentBuilder;
 using Npgsql;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases;
-public abstract class DatabaseContext
+public abstract class DatabaseContext<T>
 {
     private readonly string connectionString;
     protected DatabaseContext(string? connectionString)
@@ -12,20 +13,29 @@ public abstract class DatabaseContext
         this.connectionString = connectionString;
     }
 
-    protected async Task<T> GetById<T>(string command, Guid id)
+    protected async Task<T> GetFirstByIdAsync(IFluentSqlBuilder command)
     {
         using (var conn = CreateConnection())
         {
-            var res = await conn.QueryFirstOrDefaultAsync<T>(command, new { id }) ?? throw new KeyNotFoundException($"{typeof(T).Name} with id {id} not found.");
+            var res = await conn.QueryFirstAsync<T>(command.Sql, command.Parameters);
             return res;
         }
     }
 
-    protected async Task<int> SaveAsync<T>(string command, T item)
+    protected async Task<IEnumerable<T>> GetAllAsync(IFluentSqlBuilder command)
     {
         using (var conn = CreateConnection())
         {
-            var res = await conn.ExecuteAsync(command, item);
+            var res = await conn.QueryAsync<T>(command.Sql, command.Parameters);
+            return res;
+        }
+    }
+
+    protected async Task<int> PersistAsync(IFluentSqlBuilder command)
+    {
+        using (var conn = CreateConnection())
+        {
+            var res = await conn.ExecuteAsync(command.Sql, command.Parameters);
             return res;
         }
     }

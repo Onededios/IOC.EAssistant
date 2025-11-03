@@ -12,14 +12,8 @@ public class ControllerConversation(IServiceConversation _serviceConversation) :
     [HttpGet]
     public async Task<OperationResult<IEnumerable<Conversation>>> Conversations(Guid sessionId)
     {
-        var res = await _serviceConversation.GetConversations(sessionId);
-        return res;
-    }
-
-    [HttpGet]
-    public async Task<OperationResult<Conversation>> Conversation(Guid conversationId)
-    {
-        var res = await _serviceConversation.GetConversation(conversationId);
+        // TODO : filter by sessionId
+        var res = await _serviceConversation.GetAllAsync();
         return res;
     }
 }
