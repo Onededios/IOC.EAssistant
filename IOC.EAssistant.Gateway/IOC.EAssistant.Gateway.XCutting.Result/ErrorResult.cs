@@ -3,14 +3,12 @@
 namespace IOC.EAssistant.Gateway.XCutting.Results;
 public class ErrorResult
 {
-#if !DEBUG
-    [JsonIgnore]
-#endif
-    public string? ExceptionMessage { get; set; }
-    public string ErrorMessage { get; set; }
-    public ErrorResult(string message, Exception? exception)
+    public string Title { get; set; }
+    public string Message { get; set; }
+
+    public ErrorResult(string message, string title = "unknown")
     {
-        ErrorMessage = message;
-        ExceptionMessage = exception?.Message;
+        Title = title;
+        Message = message;
     }
 }

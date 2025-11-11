@@ -39,7 +39,7 @@ public class ServiceQuestion(
                 if (answerResult.HasErrors)
                 {
                     _logger.LogError("Failed to save Answer for Question ID: {QuestionId}", entity.id);
-                    operationResult.AddResultWithError(false, "Question saved but Answer failed to save.", -1, null);
+                    operationResult.AddResultWithError(false, ActionSavingResult<Question, Answer>(), -1, null);
                     return operationResult;
                 }
 
@@ -50,8 +50,7 @@ public class ServiceQuestion(
         }
         catch (Exception ex)
         {
-            operationResult.AddResultWithError(false,
-                $"An error occurred while saving Question with ID: {entity.id}", -1, ex);
+            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
             _logger.LogError(ex, "Error saving Question with ID: {QuestionId}", entity.id);
         }
 
@@ -91,7 +90,7 @@ public class ServiceQuestion(
                 if (answerResult.HasErrors)
                 {
                     _logger.LogError("Failed to save some or all Answers");
-                    operationResult.AddResultWithError(false, "Questions saved but some Answers failed to save.", -1, null);
+                    operationResult.AddResultWithError(false, ActionSavingResult<Question, Answer>(), -1, null);
                     return operationResult;
                 }
 
@@ -102,8 +101,7 @@ public class ServiceQuestion(
         }
         catch (Exception ex)
         {
-            operationResult.AddResultWithError(false,
-                $"An error occurred while saving {entityList.Count} Questions.", -1, ex);
+            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
             _logger.LogError(ex, "Error saving multiple Questions");
         }
 

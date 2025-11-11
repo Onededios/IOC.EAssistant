@@ -9,6 +9,10 @@ public abstract class ServiceBase<TEntity>(
         IDatabaseEAssistantBase<TEntity> _repository
     ) : IServiceBase<TEntity>
 {
+
+    protected static ErrorResult SearchingForIdErrorResult(Guid id) => new ErrorResult($"Entity of type {typeof(TEntity).Name} with ID {id} not found.", $"search for {typeof(TEntity).Name}");
+    protected static ErrorResult ActionErrorResult(string action) => new ErrorResult($"An error occurred while {action} the {typeof(TEntity).Name}.", action);
+    protected static ErrorResult ActionSavingResult<T1, T2>() => new ErrorResult($"{typeof(T1).Name} but {typeof(T2).Name} failed to save.", "multiple entity saving");
     public async Task<OperationResult<TEntity?>> GetAsync(Guid id)
     {
         var operationResult = new OperationResult<TEntity>();
@@ -26,13 +30,13 @@ public abstract class ServiceBase<TEntity>(
             }
             else
             {
-                operationResult.AddError($"Entity of type {typeof(TEntity).Name} with ID {id} not found.", default);
+                operationResult.AddError(SearchingForIdErrorResult(id), default);
                 _logger.LogWarning("Entity of type {EntityType} with ID {EntityId} not found", typeof(TEntity).Name, id);
             }
         }
         catch (Exception ex)
         {
-            operationResult.AddError("An error occurred while retrieving the entity.", ex);
+            operationResult.AddError(ActionErrorResult("retrieving"), ex);
             _logger.LogError(ex, "Error retrieving entity of type {EntityType} with ID {EntityId}", typeof(TEntity).Name, id);
         }
 
@@ -43,6 +47,8 @@ public abstract class ServiceBase<TEntity>(
     {
         var operationResult = new OperationResult<bool>();
 
+        _logger.LogInformation("Deleting entity of type {EntityType} with ID {EntityId}", typeof(TEntity).Name, id);
+
         try
         {
             var res = await _repository.DeleteAsync(id);
@@ -51,7 +57,7 @@ public abstract class ServiceBase<TEntity>(
         }
         catch (Exception ex)
         {
-            operationResult.AddResultWithError(false, "An error occurred while deleting the entity.", -1, ex);
+            operationResult.AddResultWithError(false, ActionErrorResult("deleting"), -1, ex);
             _logger.LogError(ex, "Error deleting entity of type {EntityType} with ID {EntityId}", typeof(TEntity).Name, id);
         }
 

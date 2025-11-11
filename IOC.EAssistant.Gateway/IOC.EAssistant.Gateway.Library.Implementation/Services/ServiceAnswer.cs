@@ -34,8 +34,7 @@ public class ServiceAnswer(
         }
         catch (Exception ex)
         {
-            operationResult.AddResultWithError(false,
-                $"An error occurred while saving Answer for Question ID: {entity.question_id}", -1, ex);
+            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
             _logger.LogError(ex, "Error saving Answer for Question ID: {QuestionId}", entity.question_id);
         }
 
@@ -65,8 +64,7 @@ public class ServiceAnswer(
         }
         catch (Exception ex)
         {
-            operationResult.AddResultWithError(false,
-                $"An error occurred while saving {entityList.Count} Answers.", -1, ex);
+            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
             _logger.LogError(ex, "Error saving multiple Answers");
         }
 

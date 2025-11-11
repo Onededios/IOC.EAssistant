@@ -20,7 +20,7 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
             .From($"questions q")
             .InnerJoin($"answers a ON q.id = a.question_id")
             .Where($"q.id = {id}");
-        return await GetFirstByIdAsync(builder);
+        return await GetFirstByIdAsync(builder, MapQuestionAnswer);
     }
 
     public override async Task<int> SaveAsync(Question item)
@@ -47,4 +47,10 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
 
         return await PersistAsync(builder);
     }
+
+    private static Func<Question, Answer, Question> MapQuestionAnswer => (question, answer) =>
+    {
+        question.answer = answer;
+        return question;
+    };
 }

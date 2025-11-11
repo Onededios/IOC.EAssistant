@@ -22,7 +22,7 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
             .InnerJoin($"questions q ON c.id = q.conversation_id")
             .InnerJoin($"answers a ON q.id = a.question_id")
             .Where($"s.id = {id}");
-        return await GetFirstByIdAsync(builder);
+        return await GetFirstByIdAsync(builder, Map);
     }
 
     public override async Task<int> SaveAsync(Session item)
@@ -49,4 +49,14 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
 
         return await PersistAsync(builder);
     }
+
+    private static Func<Session, Conversation, Question, Answer, Session> Map => (session, conversation, question, answer) =>
+    {
+        question.answer = answer;
+        conversation.questions ??= new List<Question>();
+        conversation.questions.Add(question);
+        session.conversations ??= new List<Conversation>();
+        session.conversations.Add(conversation);
+        return session;
+    };
 }
