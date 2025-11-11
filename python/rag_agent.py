@@ -4,12 +4,14 @@ Creates an agent with tools for querying vectorized documents with conversation 
 and improved retrieval + web search fallbacks.
 """
 from typing import List, Tuple, Optional
+import os
 from dotenv import load_dotenv
 from langchain.tools import tool
 from langchain.agents import create_agent
 from langchain_chroma import Chroma
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_ollama import OllamaEmbeddings, ChatOllama
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
 load_dotenv()
 
@@ -22,8 +24,9 @@ class RAGAgent:
         self,
         persist_directory: str = "./chroma_db",
         collection_name: str = "ioc_data",
-        embedding_model: str = "nomic-embed-text",
-        llm_model: str = "llama3.2",
+        embedding_model: str = "text-embedding-3-small",
+        llm_model: str = "gpt-4o-mini",
+        provider: str = "openai",
         temperature: float = 0.0,
         k_results: int = 4,
         num_ctx: int = 8192,
@@ -37,11 +40,12 @@ class RAGAgent:
         Args:
             persist_directory: Path to ChromaDB
             collection_name: Name of the ChromaDB collection
-            embedding_model: Ollama embedding model
-            llm_model: Ollama LLM model
+            embedding_model: Embedding model name (depends on provider)
+            llm_model: LLM model name (depends on provider)
+            provider: Model provider - "ollama" or "openai"
             temperature: LLM temperature (0-1)
             k_results: Number of documents to retrieve
-            num_ctx: LLM context window
+            num_ctx: LLM context window (only for Ollama)
             use_mmr: Use maximal marginal relevance for retrieval diversification
             fetch_k_multiplier: Over-fetch factor for MMR
             score_threshold: Similarity score cutoff when not using MMR
@@ -52,24 +56,53 @@ class RAGAgent:
         self.use_mmr = use_mmr
         self.fetch_k_multiplier = max(2, int(fetch_k_multiplier))
         self.score_threshold = float(score_threshold)
+        self.provider = provider.lower()
 
-        print(f"Initializing RAG Agent with model {llm_model}...")
+        print(f"Initializing RAG Agent with provider {self.provider} and model {llm_model}...")
 
-        # Decide Ollama GPU param (-1 uses all GPUs, 0 CPU), keep simple and robust
-        try:
-            import torch  # type: ignore
+        # Initialize embeddings and LLM based on provider
+        if self.provider == "openai":
+            # OpenAI setup
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError("OPENAI_API_KEY not found in environment variables")
+            
+            print(f"Using OpenAI with embedding model: {embedding_model}")
+            self.embeddings = OpenAIEmbeddings(
+                model=embedding_model,
+                openai_api_key=api_key,
+            )
+            
+            self.llm = ChatOpenAI(
+                model=llm_model,
+                temperature=temperature,
+                openai_api_key=api_key,
+            )
+            
+        elif self.provider == "ollama":
+            # Ollama setup (existing logic)
+            # Decide Ollama GPU param (-1 uses all GPUs, 0 CPU), keep simple and robust
+            try:
+                import torch  # type: ignore
+                num_gpu_param = -1 if torch.cuda.is_available() else 0
+            except Exception:
+                num_gpu_param = 0
 
-            num_gpu_param = -1 if torch.cuda.is_available() else 0
-        except Exception:
-            num_gpu_param = 0
-
-        print(f"Using num_gpu parameter: {num_gpu_param}")
-
-        # Initialize embeddings
-        self.embeddings = OllamaEmbeddings(
-            model=embedding_model,
-            num_gpu=num_gpu_param,
-        )
+            print(f"Using Ollama with num_gpu parameter: {num_gpu_param}")
+            
+            self.embeddings = OllamaEmbeddings(
+                model=embedding_model,
+                num_gpu=num_gpu_param,
+            )
+            
+            self.llm = ChatOllama(
+                model=llm_model,
+                temperature=temperature,
+                num_gpu=num_gpu_param,
+                num_ctx=num_ctx,
+            )
+        else:
+            raise ValueError(f"Unsupported provider: {self.provider}. Choose 'ollama' or 'openai'")
 
         # Load vector store
         print(f"Loading vector store from {persist_directory}...")
@@ -77,14 +110,6 @@ class RAGAgent:
             collection_name=collection_name,
             embedding_function=self.embeddings,
             persist_directory=persist_directory,
-        )
-
-        # Initialize LLM (increase context window for better grounding)
-        self.llm = ChatOllama(
-            model=llm_model,
-            temperature=temperature,
-            num_gpu=num_gpu_param,
-            num_ctx=num_ctx,
         )
 
         # Create tools

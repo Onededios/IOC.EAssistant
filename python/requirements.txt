@@ -14,4 +14,6 @@ langchain-text-splitters==1.0.0
 unstructured==0.18.15
 jq==1.10.0
 langchain-ollama==1.0.0
+langchain-openai==0.2.14
+openai==1.58.1
 duckduckgo-search==8.1.1

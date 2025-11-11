@@ -10,11 +10,22 @@ swagger = Swagger(app)
 
 # --- Initialize RAG Agent ---
 print("Initializing RAG Agent...")
+provider = os.getenv("MODEL_PROVIDER", "openai")  # Default to openai
+
+# Set default models based on provider
+if provider.lower() == "openai":
+    default_embedding = "text-embedding-3-small"
+    default_llm = "gpt-4o-mini"
+else:
+    default_embedding = "nomic-embed-text"
+    default_llm = "llama3.2"
+
 rag_agent = RAGAgent(
     persist_directory=os.getenv("CHROMA_DB_PATH", "./chroma_db"),
     collection_name=os.getenv("COLLECTION_NAME", "ioc_data"),
-    embedding_model=os.getenv("EMBEDDING_MODEL", "nomic-embed-text"),
-    llm_model=os.getenv("LLM_MODEL", "llama3.2"),
+    embedding_model=os.getenv("EMBEDDING_MODEL", default_embedding),
+    llm_model=os.getenv("LLM_MODEL", default_llm),
+    provider=provider,
     temperature=float(os.getenv("LLM_TEMPERATURE", "0")),
     k_results=int(os.getenv("K_RESULTS", "4"))
 )

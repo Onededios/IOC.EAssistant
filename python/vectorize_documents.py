@@ -3,6 +3,7 @@ Document Vectorization Script - OPTIMIZED VERSION
 Converts documents to vectors and persists them to ChromaDB with enhanced metadata
 """
 from langchain_ollama import OllamaEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -18,8 +19,12 @@ from utils import configure_gpu_settings
 
 load_dotenv()
 
+# Get provider from environment
+PROVIDER = os.getenv("MODEL_PROVIDER", "openai").lower()
+
 # Configure GPU usage for Ollama (automatically falls back to CPU if no GPU available)
-num_gpus = configure_gpu_settings(num_gpu=1, cuda_device=0)
+if PROVIDER == "ollama":
+    num_gpus = configure_gpu_settings(num_gpu=1, cuda_device=0)
 
 
 def extract_metadata_from_filename(filename: str) -> dict:
@@ -204,21 +209,33 @@ def vectorize_and_persist(
         preview = doc.page_content[:200].replace('\n', ' ')
         doc.metadata['preview'] = preview
     
-    print(f"Creating embeddings using {embedding_model}...")
+    print(f"Creating embeddings using {embedding_model} with provider {PROVIDER}...")
     
-    # Detect GPU availability
-    try:
-        import torch
-        gpu_available = torch.cuda.is_available()
-        num_gpu_param = -1 if gpu_available else 0
-    except ImportError:
-        gpu_available = False
-        num_gpu_param = 0
-    
-    embeddings = OllamaEmbeddings(
-        model=embedding_model,
-        num_gpu=num_gpu_param  # Use GPU if available, otherwise CPU
-    )
+    # Initialize embeddings based on provider
+    if PROVIDER == "openai":
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
+        embeddings = OpenAIEmbeddings(
+            model=embedding_model,
+            openai_api_key=api_key,
+        )
+    elif PROVIDER == "ollama":
+        # Detect GPU availability
+        try:
+            import torch
+            gpu_available = torch.cuda.is_available()
+            num_gpu_param = -1 if gpu_available else 0
+        except ImportError:
+            gpu_available = False
+            num_gpu_param = 0
+        
+        embeddings = OllamaEmbeddings(
+            model=embedding_model,
+            num_gpu=num_gpu_param  # Use GPU if available, otherwise CPU
+        )
+    else:
+        raise ValueError(f"Unsupported provider: {PROVIDER}. Choose 'ollama' or 'openai'")
     
     print(f"Persisting to ChromaDB at {persist_directory}...")
     
@@ -243,6 +260,19 @@ def vectorize_and_persist(
 
 
 if __name__ == "__main__":
+    # Get embedding model from environment
+    embedding_model = os.getenv("EMBEDDING_MODEL")
+    
+    # Set defaults based on provider if not specified
+    if not embedding_model:
+        if PROVIDER == "openai":
+            embedding_model = "text-embedding-3-small"
+        else:
+            embedding_model = "nomic-embed-text"
+    
+    print(f"Using provider: {PROVIDER}")
+    print(f"Using embedding model: {embedding_model}")
+    
     # Run the vectorization process
-    vectorize_and_persist()
+    vectorize_and_persist(embedding_model=embedding_model)
 
