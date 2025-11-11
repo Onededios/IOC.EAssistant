@@ -16,8 +16,7 @@ rag_agent = RAGAgent(
     embedding_model=os.getenv("EMBEDDING_MODEL", "nomic-embed-text"),
     llm_model=os.getenv("LLM_MODEL", "llama3.2"),
     temperature=float(os.getenv("LLM_TEMPERATURE", "0")),
-    k_results=int(os.getenv("K_RESULTS", "4")),
-    db_path=os.getenv("DB_PATH", "./histories.db")
+    k_results=int(os.getenv("K_RESULTS", "4"))
 )
 print("RAG Agent initialized successfully!")
 
@@ -25,7 +24,7 @@ print("RAG Agent initialized successfully!")
 @app.route("/chat", methods=["POST"])
 def chat():
     """
-    Chat with IOC.EAssistant chatbot using RAG
+    Chat with IOC.EAssistant chatbot using RAG with conversation history
     ---
     parameters:
       - in: body
@@ -34,29 +33,71 @@ def chat():
         schema:
           type: object
           required:
-            - query
+            - messages
           properties:
-            query:
-              type: string
-              example: "Què és l'IOC?"
-            user_id:
-              type: string
-              example: "student1"
+            messages:
+              type: array
+              items:
+                type: object
+                properties:
+                  index:
+                    type: integer
+                  question:
+                    type: string
+                  answer:
+                    type: string
+              example:
+                - index: 0
+                  question: "Què és l'IOC?"
+                  answer: "L'IOC és l'Institut Obert de Catalunya..."
+                - index: 1
+                  question: "Com em puc matricular?"
+                  answer: ""
+            modelConfig:
+              type: object
+              properties:
+                temperature:
+                  type: number
+                  example: 0.7
+            metadata:
+              type: object
+              properties:
+                locale:
+                  type: string
+                  example: "ca-ES"
     responses:
       200:
-        description: Chatbot answer with history
+        description: Chatbot answer
         schema:
           type: object
           properties:
-            answer:
-              type: string
-              example: "L'IOC és l'Institut Obert de Catalunya..."
-            user_id:
-              type: string
-              example: "student1"
-            timestamp:
-              type: string
-              example: "2025-10-30T12:34:56"
+            choices:
+              type: array
+              items:
+                type: object
+                properties:
+                  index:
+                    type: integer
+                  message:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                      content:
+                        type: string
+                  finishReason:
+                    type: string
+            usage:
+              type: object
+              properties:
+                promptTokens:
+                  type: integer
+                completionTokens:
+                  type: integer
+                totalTokens:
+                  type: integer
+            metadata:
+              type: object
       400:
         description: Bad request
         schema:
@@ -74,19 +115,68 @@ def chat():
     """
     try:
         data = request.get_json(force=True)
-        query = data.get("query", "").strip()
-        user_id = data.get("user_id", "default")
+        messages = data.get("messages", [])
+        model_config = data.get("modelConfig", {})
+        metadata = data.get("metadata", {})
 
-        if not query:
-            return jsonify({"error": "query field required"}), 400
+        if not messages:
+            return jsonify({"error": "messages field required"}), 400
         
-        # Get answer from RAG agent
-        answer = rag_agent.query(question=query, user_id=user_id, verbose=False)
+        # Get the last message (current question)
+        last_message = messages[-1]
+        current_question = last_message.get("question", "").strip()
         
+        if not current_question:
+            return jsonify({"error": "Last message must contain a question"}), 400
+        
+        # Build conversation history from previous messages (excluding the last one)
+        conversation_history = []
+        for msg in messages[:-1]:
+            question = msg.get("question", "")
+            answer = msg.get("answer", "")
+            if question and answer:
+                conversation_history.append((question, answer))
+        
+        # Get temperature from modelConfig if provided
+        temperature = model_config.get("temperature")
+        
+        # Get answer from RAG agent with history
+        start_time = datetime.now()
+        answer = rag_agent.query_with_history(
+            question=current_question,
+            conversation_history=conversation_history,
+            temperature=temperature,
+            verbose=False
+        )
+        end_time = datetime.now()
+        processing_time = int((end_time - start_time).total_seconds() * 1000)
+        
+        # Estimate token usage (rough approximation)
+        prompt_tokens = sum(len(q.split()) + len(a.split()) for q, a in conversation_history) + len(current_question.split())
+        completion_tokens = len(answer.split())
+        total_tokens = prompt_tokens + completion_tokens
+        
+        # Return response in the expected format
         return jsonify({
-            "answer": answer,
-            "user_id": user_id,
-            "timestamp": datetime.now().isoformat()
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": answer
+                    },
+                    "finishReason": "stop"
+                }
+            ],
+            "usage": {
+                "promptTokens": prompt_tokens,
+                "completionTokens": completion_tokens,
+                "totalTokens": total_tokens
+            },
+            "metadata": {
+                "modelVersion": rag_agent.llm.model,
+                "processingTime": processing_time
+            }
         })
     
     except Exception as e:
@@ -94,61 +184,31 @@ def chat():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/history/<user_id>", methods=["GET"])
-def get_history(user_id):
+@app.route("/health", methods=["GET"])
+def health():
     """
-    Get conversation history for a specific user
+    Health check endpoint
     ---
-    parameters:
-      - in: path
-        name: user_id
-        type: string
-        required: true
-        description: User identifier
-      - in: query
-        name: limit
-        type: integer
-        default: 10
-        description: Maximum number of conversations to retrieve
     responses:
       200:
-        description: User conversation history
+        description: Service is healthy
         schema:
           type: object
           properties:
-            user_id:
+            status:
               type: string
-            history:
-              type: array
-              items:
-                type: object
-                properties:
-                  question:
-                    type: string
-                  answer:
-                    type: string
-                  timestamp:
-                    type: string
-      500:
-        description: Internal server error
-        schema:
-          type: object
-          properties:
-            error:
+              example: "healthy"
+            model:
+              type: string
+              example: "llama3.2"
+            timestamp:
               type: string
     """
-    try:
-        limit = request.args.get("limit", default=10, type=int)
-        history = rag_agent.get_user_conversation_history(user_id, limit=limit)
-        
-        return jsonify({
-            "user_id": user_id,
-            "history": history
-        })
-    
-    except Exception as e:
-        print(f"Error in /history: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    return jsonify({
+        "status": "healthy",
+        "model": rag_agent.llm.model,
+        "timestamp": datetime.now().isoformat()
+    })
 
 
 if __name__ == "__main__":

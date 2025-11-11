@@ -55,8 +55,5 @@ data/
 # Chroma database
 chroma_db/
 
-# SQLite database files
-histories.db
-
 # Environment variables
 .env

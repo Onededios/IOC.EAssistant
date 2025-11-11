@@ -13,13 +13,13 @@ import json
 import os
 import re
 from datetime import datetime
+from utils import configure_gpu_settings
 
 
 load_dotenv()
 
-# Configure GPU usage for Ollama
-os.environ['OLLAMA_NUM_GPU'] = '1'  # Use 1 GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'  # Use first GPU
+# Configure GPU usage for Ollama (automatically falls back to CPU if no GPU available)
+num_gpus = configure_gpu_settings(num_gpu=1, cuda_device=0)
 
 
 def extract_metadata_from_filename(filename: str) -> dict:
@@ -177,7 +177,7 @@ def vectorize_and_persist(
     
     # Print sample metadata
     if documents:
-        print("\n📋 Sample document metadata:")
+        print("\nSample document metadata:")
         sample = documents[0]
         print(f"  Title: {sample.metadata.get('title', 'N/A')}")
         print(f"  Type: {sample.metadata.get('type', 'N/A')}")
@@ -205,16 +205,26 @@ def vectorize_and_persist(
         doc.metadata['preview'] = preview
     
     print(f"Creating embeddings using {embedding_model}...")
+    
+    # Detect GPU availability
+    try:
+        import torch
+        gpu_available = torch.cuda.is_available()
+        num_gpu_param = -1 if gpu_available else 0
+    except ImportError:
+        gpu_available = False
+        num_gpu_param = 0
+    
     embeddings = OllamaEmbeddings(
         model=embedding_model,
-        num_gpu=-1  # Use GPU for embeddings
+        num_gpu=num_gpu_param  # Use GPU if available, otherwise CPU
     )
     
     print(f"Persisting to ChromaDB at {persist_directory}...")
     
     # Clear existing collection if it exists
     if os.path.exists(persist_directory):
-        print("⚠️  Existing database found. Creating new version...")
+        print("Existing database found. Creating new version...")
     
     vector_store = Chroma.from_documents(
         collection_name=collection_name,
@@ -223,8 +233,8 @@ def vectorize_and_persist(
         persist_directory=persist_directory
     )
     
-    print(f"\n✅ Successfully vectorized and persisted {len(split_docs)} document chunks!")
-    print(f"📊 Statistics:")
+    print(f"\nSuccessfully vectorized and persisted {len(split_docs)} document chunks!")
+    print(f"Statistics:")
     print(f"   - Total documents: {len(documents)}")
     print(f"   - Total chunks: {len(split_docs)}")
     print(f"   - Avg chunks per document: {len(split_docs)/len(documents):.1f}")
