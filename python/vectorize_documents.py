@@ -35,10 +35,15 @@ def extract_metadata_from_filename(filename: str) -> dict:
     # Remove .json extension
     name = filename.replace('.json', '')
     
-    # Extract URL
-    url = name.replace('_', '/', 1).replace('_', '/', 1).replace('_', '.', 1)
-    url = url.replace('_', '/')
-    metadata['source_url'] = f"https://{url.split('https__')[1] if 'https__' in url else url}"
+    # Extract URL using regex and structured parsing
+    # Example filename: https__ioc.xtec.cat_educacio_20-latest-news_1111-adjudicacio-places-fp-curs-2022-23-semestre-1
+    url_match = re.match(r'^https__([^.]+)\.([^.]+)\.([^.]+)_(.+?)(?:_\d+-.*)?$', name)
+    if url_match:
+        domain = f"{url_match.group(1)}.{url_match.group(2)}.{url_match.group(3)}"
+        path = url_match.group(4).replace('_', '/')
+        metadata['source_url'] = f"https://{domain}/{path}"
+    else:
+        metadata['source_url'] = filename  # fallback: use filename if pattern doesn't match
     
     # Extract ID from filename (e.g., 1111)
     id_match = re.search(r'_(\d+)-', name)
