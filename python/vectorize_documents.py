@@ -5,7 +5,7 @@ Converts documents to vectors and persists them to ChromaDB with enhanced metada
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
-from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from typing import List
 from dotenv import load_dotenv
