@@ -2,13 +2,14 @@ using IOC.EAssistant.Gateway.Api.Extension;
 using IOC.EAssistant.Gateway.Infrastructure.Implementation.Extension;
 using IOC.EAssistant.Gateway.Library.Implementation.Extension;
 using Serilog;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.WriteIndented = true;
 });
@@ -30,4 +31,4 @@ app.UseCORSPolicy(builder.Configuration);
 app.MapControllers();
 app.AndLoggingExtension();
 
-app.Run();
+await app.RunAsync();

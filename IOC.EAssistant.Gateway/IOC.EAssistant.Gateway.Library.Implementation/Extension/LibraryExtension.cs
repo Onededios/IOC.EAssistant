@@ -12,6 +12,7 @@ public static class LibraryExtension
         services.AddScoped<IServiceConversation, ServiceConversation>();
         services.AddScoped<IServiceAnswer, ServiceAnswer>();
         services.AddScoped<IServiceQuestion, ServiceQuestion>();
+        services.AddScoped<IServiceChat, ServiceChat>();
         return services;
     }
 }

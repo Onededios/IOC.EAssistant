@@ -1,11 +1,12 @@
 ﻿using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 public class Answer : Entity
 {
-    public required Guid question_id { get; set; }
-    public string answer { get; set; } = string.Empty;
-    public int token_count { get; set; }
-    public JsonObject metadata { get; set; } = new JsonObject();
-    public JsonObject sources { get; set; } = new JsonObject();
+    public required Guid IdQuestion { get; set; }
+    public string Content { get; set; } = string.Empty;
+    public int TokenCount { get; set; }
+    public JsonObject Metadata { get; set; } = new JsonObject();
+    public JsonObject Sources { get; set; } = new JsonObject();
 }

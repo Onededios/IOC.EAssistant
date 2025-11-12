@@ -15,7 +15,7 @@ public class ServiceQuestion(
     {
         var operationResult = new OperationResult<bool>();
 
-        _logger.LogInformation("Saving Question with ID: {QuestionId}", entity.id);
+        _logger.LogInformation("Saving Question with ID: {QuestionId}", entity.Id);
 
         try
         {
@@ -24,26 +24,26 @@ public class ServiceQuestion(
 
             if (!questionSaved)
             {
-                _logger.LogWarning("Failed to save Question with ID: {QuestionId}", entity.id);
+                _logger.LogWarning("Failed to save Question with ID: {QuestionId}", entity.Id);
                 operationResult.AddResult(false);
                 return operationResult;
             }
 
-            _logger.LogInformation("Successfully saved Question with ID: {QuestionId}", entity.id);
+            _logger.LogInformation("Successfully saved Question with ID: {QuestionId}", entity.Id);
 
-            if (entity.answer != null)
+            if (entity.Answer != null)
             {
-                _logger.LogInformation("Saving associated Answer for Question ID: {QuestionId}", entity.id);
-                var answerResult = await _serviceAnswer.SaveAsync(entity.answer);
+                _logger.LogInformation("Saving associated Answer for Question ID: {QuestionId}", entity.Id);
+                var answerResult = await _serviceAnswer.SaveAsync(entity.Answer);
 
                 if (answerResult.HasErrors)
                 {
-                    _logger.LogError("Failed to save Answer for Question ID: {QuestionId}", entity.id);
+                    _logger.LogError("Failed to save Answer for Question ID: {QuestionId}", entity.Id);
                     operationResult.AddResultWithError(false, ActionSavingResult<Question, Answer>(), -1, null);
                     return operationResult;
                 }
 
-                _logger.LogInformation("Successfully saved Answer for Question ID: {QuestionId}", entity.id);
+                _logger.LogInformation("Successfully saved Answer for Question ID: {QuestionId}", entity.Id);
             }
 
             operationResult.AddResult(true);
@@ -51,7 +51,7 @@ public class ServiceQuestion(
         catch (Exception ex)
         {
             operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving Question with ID: {QuestionId}", entity.id);
+            _logger.LogError(ex, "Error saving Question with ID: {QuestionId}", entity.Id);
         }
 
         return operationResult;
@@ -78,8 +78,8 @@ public class ServiceQuestion(
             _logger.LogInformation("Successfully saved {Count} Questions", questionSaveCount);
 
             var answersToSave = entityList
-                .Where(q => q.answer != null)
-                .Select(q => q.answer!)
+                .Where(q => q.Answer != null)
+                .Select(q => q.Answer!)
                 .ToList();
 
             if (answersToSave.Count > 0)

@@ -14,10 +14,24 @@ public static class InfrastructureExtension
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         var connstr = configuration["EASSISTANT_CONNSTR"];
-        services.AddScopedDatabase<Answer, IDatabaseEAssistantAnswer, DatabaseEAssistantAnswer>(connstr);
-        services.AddScopedDatabase<Question, IDatabaseEAssistantQuestion, DatabaseEAssistantQuestion>(connstr);
-        services.AddScopedDatabase<Conversation, IDatabaseEAssistantConversation, DatabaseEAssistantConversation>(connstr);
-        services.AddScopedDatabase<Session, IDatabaseEAssistantSession, DatabaseEAssistantSession>(connstr);
+
+        services.AddScoped(sp => new DatabaseEAssistantAnswer(connstr));
+        services.AddScoped<IDatabaseEAssistantAnswer>(sp => sp.GetRequiredService<DatabaseEAssistantAnswer>());
+        services.AddScoped<IDatabaseEAssistantBase<Answer>>(sp => sp.GetRequiredService<DatabaseEAssistantAnswer>());
+
+        services.AddScoped(sp => new DatabaseEAssistantQuestion(connstr)!);
+        services.AddScoped<IDatabaseEAssistantQuestion>(sp => sp.GetRequiredService<DatabaseEAssistantQuestion>());
+        services.AddScoped<IDatabaseEAssistantBase<Question>>(sp => sp.GetRequiredService<DatabaseEAssistantQuestion>());
+
+        services.AddScoped(sp => new DatabaseEAssistantConversation(connstr)!);
+        services.AddScoped<IDatabaseEAssistantConversation>(sp => sp.GetRequiredService<DatabaseEAssistantConversation>());
+        services.AddScoped<IDatabaseEAssistantBase<Conversation>>(sp => sp.GetRequiredService<DatabaseEAssistantConversation>());
+
+        services.AddScoped(sp => new DatabaseEAssistantSession(connstr)!);
+        services.AddScoped<IDatabaseEAssistantSession>(sp => sp.GetRequiredService<DatabaseEAssistantSession>());
+        services.AddScoped<IDatabaseEAssistantBase<Session>>(sp => sp.GetRequiredService<DatabaseEAssistantSession>());
+
+
 
         services.AddScoped<IProxyEAssistant, ProxyEAssistant>(c =>
         {
@@ -26,20 +40,6 @@ public static class InfrastructureExtension
         });
 
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());
-
-        return services;
-    }
-
-    private static IServiceCollection AddScopedDatabase<TEntity, TInterface, TImplementation>(
-            this IServiceCollection services,
-            string connstr
-        )
-        where TImplementation : class, TInterface, IDatabaseEAssistantBase<TEntity>
-        where TInterface : class
-    {
-        services.AddScoped(sp => (TImplementation)Activator.CreateInstance(typeof(TImplementation), connstr)!);
-        services.AddScoped<TInterface>(sp => sp.GetRequiredService<TImplementation>());
-        services.AddScoped<IDatabaseEAssistantBase<TEntity>>(sp => sp.GetRequiredService<TImplementation>());
 
         return services;
     }

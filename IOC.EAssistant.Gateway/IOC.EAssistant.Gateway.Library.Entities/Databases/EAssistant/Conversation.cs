@@ -1,7 +1,7 @@
 ﻿namespace IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 public class Conversation : Entity
 {
-    public required Guid session_id { get; set; }
-    public List<Question> questions { get; set; } = new List<Question>();
-    public required string title { get; set; }
+    public required Guid IdSession { get; set; }
+    public List<Question> Questions { get; set; } = new List<Question>();
+    public required string Title { get; set; }
 }

@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace IOC.EAssistant.Gateway.XCutting.Results;
+﻿namespace IOC.EAssistant.Gateway.XCutting.Results;
 public class ErrorResult
 {
     public string Title { get; set; }

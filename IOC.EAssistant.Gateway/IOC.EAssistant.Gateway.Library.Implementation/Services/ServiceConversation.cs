@@ -16,7 +16,7 @@ public class ServiceConversation(
         var operationResult = new OperationResult<bool>();
 
         _logger.LogInformation("Saving Conversation with ID: {ConversationId} for Session ID: {SessionId}",
-            entity.id, entity.session_id);
+            entity.Id, entity.IdSession);
 
         try
         {
@@ -25,29 +25,29 @@ public class ServiceConversation(
 
             if (!conversationSaved)
             {
-                _logger.LogWarning("Failed to save Conversation with ID: {ConversationId}", entity.id);
+                _logger.LogWarning("Failed to save Conversation with ID: {ConversationId}", entity.Id);
                 operationResult.AddResult(false);
                 return operationResult;
             }
 
-            _logger.LogInformation("Successfully saved Conversation with ID: {ConversationId}", entity.id);
+            _logger.LogInformation("Successfully saved Conversation with ID: {ConversationId}", entity.Id);
 
-            if (entity.questions != null && entity.questions.Count > 0)
+            if (entity.Questions != null && entity.Questions.Count > 0)
             {
                 _logger.LogInformation("Saving {Count} Questions for Conversation ID: {ConversationId}",
-                    entity.questions.Count, entity.id);
+                    entity.Questions.Count, entity.Id);
 
-                var questionsResult = await _serviceQuestion.SaveMultipleAsync(entity.questions);
+                var questionsResult = await _serviceQuestion.SaveMultipleAsync(entity.Questions);
 
                 if (questionsResult.HasErrors)
                 {
-                    _logger.LogError("Failed to save Questions for Conversation ID: {ConversationId}", entity.id);
+                    _logger.LogError("Failed to save Questions for Conversation ID: {ConversationId}", entity.Id);
                     operationResult.AddResultWithError(false, ActionSavingResult<Question, Answer>(), -1, null);
                     return operationResult;
                 }
 
                 _logger.LogInformation("Successfully saved {Count} Questions for Conversation ID: {ConversationId}",
-                    entity.questions.Count, entity.id);
+                    entity.Questions.Count, entity.Id);
             }
 
             operationResult.AddResult(true);
@@ -55,7 +55,7 @@ public class ServiceConversation(
         catch (Exception ex)
         {
             operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving Conversation with ID: {ConversationId}", entity.id);
+            _logger.LogError(ex, "Error saving Conversation with ID: {ConversationId}", entity.Id);
         }
 
         return operationResult;
@@ -82,8 +82,8 @@ public class ServiceConversation(
             _logger.LogInformation("Successfully saved {Count} Conversations", conversationSaveCount);
 
             var allQuestions = entityList
-                .Where(c => c.questions != null && c.questions.Count > 0)
-                .SelectMany(c => c.questions)
+                .Where(c => c.Questions != null && c.Questions.Count > 0)
+                .SelectMany(c => c.Questions)
                 .ToList();
 
             if (allQuestions.Count > 0)

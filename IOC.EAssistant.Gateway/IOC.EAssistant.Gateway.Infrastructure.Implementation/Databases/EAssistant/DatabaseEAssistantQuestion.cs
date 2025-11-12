@@ -16,7 +16,10 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
     public override async Task<Question?> GetAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
-            .Select($"*")
+            .Select($"""
+                        q.id as Id, q.created_at as CreatedAt, q.question as Content, q.token_count as TokenCount, q.metadata as Metadata, q.conversation_id as IdConversation,
+                        a.id as Id, a.created_at as CreatedAt, a.answer as Content, a.token_count as TokenCount, a.metadata as Metadata, a.question_id as IdQuestion
+                    """)
             .From($"questions q")
             .InnerJoin($"answers a ON q.id = a.question_id")
             .Where($"q.id = {id}");
@@ -29,7 +32,7 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
         var builder = SimpleBuilder.CreateFluent()
             .InsertInto($"questions")
             .Columns($"id, created_at, question, token_count, metadata, conversation_id")
-            .Values($"{item.id}, {item.created_at}, {item.question}, {item.token_count}, {item.metadata}, {item.conversation_id}");
+            .Values($"{item.Id}, {item.CreatedAt}, {item.Content}, {item.TokenCount}, {item.Metadata}, {item.IdConversation}");
 
         return await PersistAsync(builder);
     }
@@ -42,7 +45,7 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
 
         foreach (var item in items)
         {
-            builder.Values($"{item.id}, {item.created_at}, {item.question}, {item.token_count}, {item.metadata}, {item.conversation_id}");
+            builder.Values($"{item.Id}, {item.CreatedAt}, {item.Content}, {item.TokenCount}, {item.Metadata}, {item.IdConversation}");
         }
 
         return await PersistAsync(builder);
@@ -50,7 +53,7 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
 
     private static Func<Question, Answer, Question> MapQuestionAnswer => (question, answer) =>
     {
-        question.answer = answer;
+        question.Answer = answer;
         return question;
     };
 }

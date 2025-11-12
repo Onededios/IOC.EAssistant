@@ -1,4 +1,7 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
+using System.Text.Json.Nodes;
 
 namespace IOC.EAssistant.Gateway.Api.Extension;
 public static class SwaggerExtension
@@ -7,8 +10,21 @@ public static class SwaggerExtension
     private static readonly string docs = "api-docs";
     private static readonly string file = "swagger.json";
     private static readonly string prefix = "IOC.EAssistant";
-    public static IServiceCollection AddCustomSwagger(this IServiceCollection services) =>
-        services.AddSwaggerGen(opt => opt.SwaggerDoc(version, CreateInfoApi()));
+    public static IServiceCollection AddCustomSwagger(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(opt =>
+        {
+            opt.SwaggerDoc(version, CreateInfoApi());
+            opt.MapType<JsonObject>(() => new OpenApiSchema
+            {
+                Type = "object",
+                AdditionalPropertiesAllowed = true,
+                Example = new OpenApiObject()
+            });
+        });
+
+        return services;
+    }
 
     public static IApplicationBuilder UseCustomSwaggerUI(this IApplicationBuilder app)
     {
