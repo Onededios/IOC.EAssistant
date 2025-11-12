@@ -227,7 +227,6 @@ def vectorize_and_persist(
             gpu_available = torch.cuda.is_available()
             num_gpu_param = -1 if gpu_available else 0
         except ImportError:
-            gpu_available = False
             num_gpu_param = 0
         
         embeddings = OllamaEmbeddings(
