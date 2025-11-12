@@ -301,8 +301,8 @@ class RAGAgent:
                     fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
                     filter={"type": "noticia"},
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Noticia MMR search failed, skipping: {e}")
 
             context_blob = "\n\n".join(
                 [f"Source: {d.metadata}\nContent: {d.page_content}" for d in ctx_docs]
