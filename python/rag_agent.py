@@ -13,6 +13,19 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
+# Try to import DuckDuckGo search tools at module level
+try:
+    from langchain_community.tools import DuckDuckGoSearchResults  # type: ignore
+    DUCKDUCKGO_SEARCH_RESULTS_AVAILABLE = True
+except ImportError:
+    DUCKDUCKGO_SEARCH_RESULTS_AVAILABLE = False
+
+try:
+    from langchain_community.tools import DuckDuckGoSearchRun  # type: ignore
+    DUCKDUCKGO_SEARCH_RUN_AVAILABLE = True
+except ImportError:
+    DUCKDUCKGO_SEARCH_RUN_AVAILABLE = False
+
 load_dotenv()
 
 class RAGAgent:
@@ -220,19 +233,17 @@ class RAGAgent:
         def web_search(query: str):
             """Search the web for IOC info. Prefer site:ioc.xtec.cat; fallback open web."""
             try:
-                try:
-                    from langchain_community.tools import DuckDuckGoSearchResults  # type: ignore
-
+                if DUCKDUCKGO_SEARCH_RESULTS_AVAILABLE:
                     search = DuckDuckGoSearchResults(num_results=5)
                     results = search.run(f"site:ioc.xtec.cat {query}")
                     if not results:
                         results = search.run(query)
                     return results
-                except Exception:
-                    from langchain_community.tools import DuckDuckGoSearchRun  # type: ignore
-
+                elif DUCKDUCKGO_SEARCH_RUN_AVAILABLE:
                     search = DuckDuckGoSearchRun()
                     return search.run(f"site:ioc.xtec.cat {query}") or search.run(query)
+                else:
+                    return "Web search is not available: DuckDuckGo search tools not installed."
             except Exception as e:
                 return f"Web search failed: {str(e)}"
 
