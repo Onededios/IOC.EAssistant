@@ -307,7 +307,7 @@ class RAGAgent:
             context_blob = "\n\n".join(
                 [f"Source: {d.metadata}\nContent: {d.page_content}" for d in ctx_docs]
             )
-            response_text = self.llm.invoke(context_blob + "\n\nQuestion: " + question).content
+            response_text = self.llm.invoke(f"{context_blob}\n\nQuestion: {question}").content
 
         self.conversation_history.append((question, response_text))
         return response_text
