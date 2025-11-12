@@ -8,7 +8,7 @@ This module contains the Python components for the IOC.EAssistant project, inclu
 - Python 3.7 or higher
 - pip package manager
 
-### Install requiments
+### Install requirements
 
 ```bash
 cd python

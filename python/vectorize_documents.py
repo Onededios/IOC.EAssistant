@@ -7,13 +7,11 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from pathlib import Path
 from typing import List
 from dotenv import load_dotenv
 import json
 import os
 import re
-from datetime import datetime
 from utils import configure_gpu_settings
 
 
@@ -194,8 +192,8 @@ def vectorize_and_persist(
     
     # Use optimized text splitter with separators that respect document structure
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=700,
-        chunk_overlap=120,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
     
@@ -224,10 +222,8 @@ def vectorize_and_persist(
         # Detect GPU availability
         try:
             import torch
-            gpu_available = torch.cuda.is_available()
-            num_gpu_param = -1 if gpu_available else 0
+            num_gpu_param = -1 if torch.cuda.is_available() else 0
         except ImportError:
-            gpu_available = False
             num_gpu_param = 0
         
         embeddings = OllamaEmbeddings(

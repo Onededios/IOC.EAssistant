@@ -4,6 +4,11 @@ from rag_agent import RAGAgent
 import os
 from datetime import datetime
 
+try:
+    import tiktoken
+except ImportError:
+    tiktoken = None
+
 # --- Flask + Swagger setup ---
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -128,7 +133,6 @@ def chat():
         data = request.get_json(force=True)
         messages = data.get("messages", [])
         model_config = data.get("modelConfig", {})
-        metadata = data.get("metadata", {})
 
         if not messages:
             return jsonify({"error": "messages field required"}), 400
@@ -150,6 +154,14 @@ def chat():
         
         # Get temperature from modelConfig if provided
         temperature = model_config.get("temperature")
+        # Validate temperature: must be None or a float between 0 and 1
+        if temperature is not None:
+            try:
+                temperature = float(temperature)
+            except (TypeError, ValueError):
+                return jsonify({"error": "temperature must be a float between 0 and 1"}), 400
+            if not (0.0 <= temperature <= 1.0):
+                return jsonify({"error": "temperature must be between 0 and 1"}), 400
         
         # Get answer from RAG agent with history
         start_time = datetime.now()
@@ -162,9 +174,27 @@ def chat():
         end_time = datetime.now()
         processing_time = int((end_time - start_time).total_seconds() * 1000)
         
-        # Estimate token usage (rough approximation)
-        prompt_tokens = sum(len(q.split()) + len(a.split()) for q, a in conversation_history) + len(current_question.split())
-        completion_tokens = len(answer.split())
+        # Estimate token usage
+        # For OpenAI models, use tiktoken for accurate counting; for Ollama, use approximate word count
+        if provider.lower() == "openai" and tiktoken is not None:
+            try:
+                # Get the encoding for the model
+                encoding = tiktoken.encoding_for_model(rag_agent.llm.model)
+                # Count tokens in conversation history
+                prompt_tokens = sum(
+                    len(encoding.encode(q)) + len(encoding.encode(a)) 
+                    for q, a in conversation_history
+                ) + len(encoding.encode(current_question))
+                completion_tokens = len(encoding.encode(answer))
+            except Exception:
+                # Fallback to word count if tiktoken fails
+                prompt_tokens = sum(len(q.split()) + len(a.split()) for q, a in conversation_history) + len(current_question.split())
+                completion_tokens = len(answer.split())
+        else:
+            # For Ollama or if tiktoken is not available, use approximate word count
+            prompt_tokens = sum(len(q.split()) + len(a.split()) for q, a in conversation_history) + len(current_question.split())
+            completion_tokens = len(answer.split())
+        
         total_tokens = prompt_tokens + completion_tokens
         
         # Return response in the expected format

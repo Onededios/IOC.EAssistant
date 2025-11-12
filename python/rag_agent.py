@@ -13,6 +13,17 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
+# Import web search tools at module level to avoid runtime import overhead
+try:
+    from langchain_community.tools import DuckDuckGoSearchResults
+    SEARCH_TOOL = "results"
+except ImportError:
+    try:
+        from langchain_community.tools import DuckDuckGoSearchRun
+        SEARCH_TOOL = "run"
+    except ImportError:
+        SEARCH_TOOL = None
+
 load_dotenv()
 
 class RAGAgent:
@@ -219,18 +230,17 @@ class RAGAgent:
         @tool
         def web_search(query: str):
             """Search the web for IOC info. Prefer site:ioc.xtec.cat; fallback open web."""
+            if SEARCH_TOOL is None:
+                return "Web search not available: DuckDuckGo library not installed"
+            
             try:
-                try:
-                    from langchain_community.tools import DuckDuckGoSearchResults  # type: ignore
-
+                if SEARCH_TOOL == "results":
                     search = DuckDuckGoSearchResults(num_results=5)
                     results = search.run(f"site:ioc.xtec.cat {query}")
                     if not results:
                         results = search.run(query)
                     return results
-                except Exception:
-                    from langchain_community.tools import DuckDuckGoSearchRun  # type: ignore
-
+                else:  # SEARCH_TOOL == "run"
                     search = DuckDuckGoSearchRun()
                     return search.run(f"site:ioc.xtec.cat {query}") or search.run(query)
             except Exception as e:
@@ -301,13 +311,14 @@ class RAGAgent:
                     fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
                     filter={"type": "noticia"},
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                # Noticia MMR search failed, skipping: fallback will proceed with general documents only
+                print(f"Noticia MMR search failed, skipping: {e}")
 
             context_blob = "\n\n".join(
                 [f"Source: {d.metadata}\nContent: {d.page_content}" for d in ctx_docs]
             )
-            response_text = self.llm.invoke(context_blob + "\n\nQuestion: " + question).content
+            response_text = self.llm.invoke(f"{context_blob}\n\nQuestion: {question}").content
 
         self.conversation_history.append((question, response_text))
         return response_text
@@ -343,14 +354,51 @@ class RAGAgent:
         # Current question
         messages.append(HumanMessage(content=question))
         
-        # Temporarily override temperature if provided
-        original_temp = None
-        if temperature is not None:
-            original_temp = self.llm.temperature
-            self.llm.temperature = temperature
+        # Use custom temperature by creating a temporary LLM instance if needed
+        llm_to_use = self.llm
+        temp_agent = self.agent
+        if temperature is not None and temperature != self.llm.temperature:
+            # Create a new LLM instance with custom temperature to avoid concurrency issues
+            if self.provider == "openai":
+                llm_to_use = ChatOpenAI(
+                    model=self.llm.model,
+                    temperature=temperature,
+                    openai_api_key=os.getenv("OPENAI_API_KEY"),
+                )
+            elif self.provider == "ollama":
+                try:
+                    import torch
+                    num_gpu_param = -1 if torch.cuda.is_available() else 0
+                except Exception:
+                    num_gpu_param = 0
+                
+                llm_to_use = ChatOllama(
+                    model=self.llm.model,
+                    temperature=temperature,
+                    num_gpu=num_gpu_param,
+                    num_ctx=getattr(self.llm, 'num_ctx', 8192),
+                )
+            
+            # Create a temporary agent with the new LLM
+            system_prompt = (
+                "Ets un assistent expert de l'Institut Obert de Catalunya (IOC). "
+                "IMPORTANT: Respon SEMPRE a la pregunta més recent de l'usuari. "
+                "Tria eines segons el context: si és procediment o guia, usa retrieve_general_context; "
+                "si és canvi/novetat/'notícia' o hi ha dates recents, usa retrieve_noticia_context. "
+                "Si la recuperació és buida o poc rellevant, usa web_search. "
+                "Respon sempre en l'idioma de la pregunta."
+            )
+            try:
+                temp_agent = create_agent(llm_to_use, self.tools, system_prompt=system_prompt)
+            except NotImplementedError:
+                # If agent creation fails, just use the LLM directly in fallback
+                temp_agent = None
         
         try:
-            response = self.agent.invoke({"messages": messages})
+            if temp_agent:
+                response = temp_agent.invoke({"messages": messages})
+            else:
+                response = self.agent.invoke({"messages": messages})
             response_text = response["messages"][-1].content
         except Exception as e:
             if verbose:
@@ -377,6 +425,8 @@ class RAGAgent:
                     filter={"type": "noticia"},
                 )
             except Exception:
+                # Failure to retrieve "noticia" type documents is non-fatal;
+                # fallback will proceed with whatever documents were retrieved.
                 pass
             
             context_blob = "\n\n".join(
@@ -385,11 +435,8 @@ class RAGAgent:
             
             # Build simple prompt with context
             prompt = f"Context:\n{context_blob}\n\nQuestion: {question}\n\nAnswer:"
-            response_text = self.llm.invoke(prompt).content
-        finally:
-            # Restore original temperature if it was overridden
-            if original_temp is not None:
-                self.llm.temperature = original_temp
+            # Use the custom LLM if temperature was overridden, otherwise use default
+            response_text = llm_to_use.invoke(prompt).content
         
         return response_text
 
