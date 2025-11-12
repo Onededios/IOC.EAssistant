@@ -377,6 +377,8 @@ class RAGAgent:
                     filter={"type": "noticia"},
                 )
             except Exception:
+                # Failure to retrieve "noticia" type documents is non-fatal;
+                # fallback will proceed with whatever documents were retrieved.
                 pass
             
             context_blob = "\n\n".join(
