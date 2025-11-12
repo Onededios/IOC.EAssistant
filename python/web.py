@@ -3,6 +3,7 @@ from flasgger import Swagger
 from rag_agent import RAGAgent
 import os
 from datetime import datetime
+import tiktoken
 
 # --- Flask + Swagger setup ---
 app = Flask(__name__)
@@ -30,6 +31,46 @@ rag_agent = RAGAgent(
     k_results=int(os.getenv("K_RESULTS", "4"))
 )
 print("RAG Agent initialized successfully!")
+
+
+def count_tokens(text: str, model: str = None) -> int:
+    """
+    Count tokens in text using the appropriate method based on provider.
+    
+    For OpenAI: Uses tiktoken for accurate token counting
+    For Ollama: Uses word-based approximation (1 token ≈ 0.75 words)
+    
+    Args:
+        text: The text to count tokens for
+        model: Optional model name override
+        
+    Returns:
+        Estimated token count
+    """
+    if not text:
+        return 0
+    
+    # Use the model from RAG agent if not provided
+    if model is None:
+        model = rag_agent.llm.model
+    
+    # For OpenAI models, use tiktoken for accurate counting
+    if provider.lower() == "openai":
+        try:
+            # Try to get encoding for the specific model
+            encoding = tiktoken.encoding_for_model(model)
+        except KeyError:
+            # Fallback to cl100k_base encoding (used by gpt-4, gpt-3.5-turbo, text-embedding-ada-002)
+            encoding = tiktoken.get_encoding("cl100k_base")
+        
+        return len(encoding.encode(text))
+    
+    # For Ollama models, use word-based approximation
+    # Research suggests approximately 1 token per 0.75 words for most models
+    # This is a conservative estimate that tends to slightly overestimate
+    else:
+        word_count = len(text.split())
+        return int(word_count / 0.75)
 
 
 @app.route("/chat", methods=["POST"])
@@ -162,9 +203,15 @@ def chat():
         end_time = datetime.now()
         processing_time = int((end_time - start_time).total_seconds() * 1000)
         
-        # Estimate token usage (rough approximation)
-        prompt_tokens = sum(len(q.split()) + len(a.split()) for q, a in conversation_history) + len(current_question.split())
-        completion_tokens = len(answer.split())
+        # Count tokens accurately based on provider
+        # For prompt tokens: count all conversation history + current question
+        prompt_text = ""
+        for q, a in conversation_history:
+            prompt_text += q + " " + a + " "
+        prompt_text += current_question
+        
+        prompt_tokens = count_tokens(prompt_text)
+        completion_tokens = count_tokens(answer)
         total_tokens = prompt_tokens + completion_tokens
         
         # Return response in the expected format

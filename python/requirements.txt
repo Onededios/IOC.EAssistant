@@ -16,4 +16,5 @@ jq==1.10.0
 langchain-ollama==1.0.0
 langchain-openai==0.2.14
 openai==1.58.1
+tiktoken==0.8.0
 duckduckgo-search==8.1.1
