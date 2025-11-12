@@ -1,6 +1,4 @@
 ﻿using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-
 namespace IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 public class Answer : Entity
 {

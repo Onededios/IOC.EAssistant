@@ -1,6 +1,6 @@
 ﻿using IOC.EAssistant.Gateway.Infrastructure.Contracts.Proxies;
 using IOC.EAssistant.Gateway.Library.Contracts.Services;
-using IOC.EAssistant.Gateway.Library.Entities.Proxies.EAssistant;
+using IOC.EAssistant.Gateway.Library.Entities.Proxies.EAssistant.Chat;
 using IOC.EAssistant.Gateway.XCutting.Results;
 using Microsoft.Extensions.Logging;
 
@@ -10,9 +10,9 @@ public class ServiceChat(
     IProxyEAssistant _proxyEAssistant
 ) : IServiceChat
 {
-    public async Task<OperationResult<ChatResponse>> ChatAsync(ChatRequest request)
+    public async Task<OperationResult<ChatResponseDto>> ChatAsync(ChatRequestDto request)
     {
-        var operationResult = new OperationResult<ChatResponse>();
+        var operationResult = new OperationResult<ChatResponseDto>();
         return operationResult;
     }
 }

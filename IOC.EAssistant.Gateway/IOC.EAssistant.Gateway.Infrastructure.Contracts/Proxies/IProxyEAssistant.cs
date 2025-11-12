@@ -1,4 +1,5 @@
-﻿using IOC.EAssistant.Gateway.Infrastructure.Contracts.Proxies.Entities;
+﻿using IOC.EAssistant.Gateway.Infrastructure.Contracts.Proxies.EAssistant;
+using IOC.EAssistant.Gateway.Library.Entities.Proxies.EAssistant.Chat;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Contracts.Proxies;
 public interface IProxyEAssistant

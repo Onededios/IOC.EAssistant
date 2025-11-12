@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace IOC.EAssistant.Gateway.Api.Controllers;
 [ApiController]
 [Route("[controller]")]
-[Produces("application/json")]
-[ProducesErrorResponseType(typeof(List<ErrorResult>))]
+[ProducesResponseType(typeof(List<ErrorResult>), 400)]
 public class BaseController<TEntity>(ILogger _logger, IServiceBase<TEntity> _service) : ControllerBase
 {
     [HttpGet("{id}")]
+    [ProducesResponseType(200)]
     public async Task<ActionResult<IEnumerable<TEntity>>> ById(Guid id)
     {
         var res = await _service.GetAsync(id);
@@ -17,6 +17,7 @@ public class BaseController<TEntity>(ILogger _logger, IServiceBase<TEntity> _ser
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(bool), 200)]
     public async Task<ActionResult<bool>> Delete(Guid id)
     {
         var res = await _service.DeleteAsync(id);
