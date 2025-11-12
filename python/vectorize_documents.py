@@ -227,8 +227,7 @@ def vectorize_and_persist(
         # Detect GPU availability
         try:
             import torch
-            gpu_available = torch.cuda.is_available()
-            num_gpu_param = -1 if gpu_available else 0
+            num_gpu_param = -1 if torch.cuda.is_available() else 0
         except ImportError:
             num_gpu_param = 0
         
