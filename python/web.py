@@ -192,7 +192,7 @@ def chat():
     
     except Exception as e:
         print(f"Error in /chat: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal server error occurred. Please try again later."}), 500
 
 
 @app.route("/health", methods=["GET"])
