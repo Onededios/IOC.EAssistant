@@ -2,11 +2,58 @@ from flask import Flask, request, jsonify
 from flasgger import Swagger
 from rag_agent import RAGAgent
 import os
+import sys
+import subprocess
+import asyncio
 from datetime import datetime
 
 # --- Flask + Swagger setup ---
 app = Flask(__name__)
 swagger = Swagger(app)
+
+
+def check_and_setup_data():
+    """
+    Check if necessary data and database exist.
+    If not, run crawler and vectorize_documents.
+    """
+    data_dir = os.getenv("DATA_PATH", "./data")
+    chroma_db_dir = os.getenv("CHROMA_DB_PATH", "./chroma_db")
+    
+    # Check if data folder exists and has JSON files
+    data_exists = False
+    if os.path.exists(data_dir):
+        json_files = [f for f in os.listdir(data_dir) if f.endswith('.json')]
+        data_exists = len(json_files) > 0
+    
+    # Check if ChromaDB exists
+    chroma_db_exists = os.path.exists(chroma_db_dir) and os.path.exists(os.path.join(chroma_db_dir, "chroma.sqlite3"))
+    
+    # If data doesn't exist, run crawler
+    if not data_exists:
+      print("crawling data...")
+      subprocess.run(
+          [sys.executable, "crawler.py"],
+          cwd=os.path.dirname(os.path.abspath(__file__)),
+          capture_output=True,
+          text=True,
+          timeout=600  # 10 minutes timeout
+      )
+    
+    # If ChromaDB doesn't exist, run vectorize_documents
+    if not chroma_db_exists:
+      print("vectorizing documents...")
+      subprocess.run(
+          [sys.executable, "vectorize_documents.py"],
+          cwd=os.path.dirname(os.path.abspath(__file__)),
+          capture_output=True,
+          text=True,
+          timeout=600  # 10 minutes timeout
+      )
+
+# --- Check and setup data before initializing RAG Agent ---
+print("Checking prerequisites...")
+check_and_setup_data()
 
 # --- Initialize RAG Agent ---
 print("Initializing RAG Agent...")
@@ -223,4 +270,5 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=8080)

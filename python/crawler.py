@@ -128,7 +128,7 @@ class WebCrawler:
         
         return unique_urls
     
-    async def get_noticias_urls(self, num=100):
+    async def get_noticias_urls(self, num=50):
         NUM_PER_PAGE = 3
         noticias_urls = []
         

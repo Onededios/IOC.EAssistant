@@ -395,31 +395,6 @@ class RAGAgent:
         
         return response_text
 
-    # ---------------------------- Utilities --------------------------------
-    def clear_history(self) -> None:
-        """Clear in-memory conversation history."""
-        self.conversation_history = []
-        print("Conversation history cleared (in-memory)")
-
-    def get_history(self) -> List[Tuple[str, str]]:
-        """Get in-memory conversation history."""
-        return self.conversation_history.copy()
-
-    def search_documents(
-        self, query: str, k: Optional[int] = None, filter_dict: Optional[dict] = None
-    ) -> List:
-        """Direct search in vector store without LLM with optional filtering."""
-        k = k or self.k_results
-        if filter_dict:
-            return self.vector_store.similarity_search(query, k=k, filter=filter_dict)
-        return self.vector_store.similarity_search(query, k=k)
-
-    def search_by_metadata(self, metadata_key: str, metadata_value: str, k: int = 10) -> List:
-        """Search documents by metadata."""
-        filter_dict = {metadata_key: metadata_value}
-        return self.vector_store.similarity_search("", k=k, filter=filter_dict)
-
-
 if __name__ == "__main__":
     # Example usage for CLI testing
     agent = RAGAgent()
