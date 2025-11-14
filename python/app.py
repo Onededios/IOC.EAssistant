@@ -232,7 +232,7 @@ def chat():
                 "totalTokens": total_tokens
             },
             "metadata": {
-                "modelVersion": rag_agent.llm.model,
+                "modelVersion": getattr(rag_agent.llm, 'model_name', getattr(rag_agent.llm, 'model', 'unknown')),
                 "processingTime": processing_time
             }
         })
@@ -264,7 +264,7 @@ def health():
     """
     return jsonify({
         "status": "healthy",
-        "model": rag_agent.llm.model,
+        "model": getattr(rag_agent.llm, 'model_name', getattr(rag_agent.llm, 'model', 'unknown')),
         "timestamp": datetime.now().isoformat()
     })
 
