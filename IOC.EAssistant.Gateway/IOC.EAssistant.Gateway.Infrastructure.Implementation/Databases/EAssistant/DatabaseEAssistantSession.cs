@@ -19,7 +19,7 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
             .Select($"""
                     s.id as Id, s.created_at as CreatedAt,
                     c.id as Id, c.created_at as CreatedAt, c.title as Title, c.session_id as IdSession,
-                    q.id as Id, q.created_at as CreatedAt, q.question as Content, q.token_count as TokenCount, q.metadata as Metadata, q.conversation_id as IdConversation,
+                    q.id as Id, q.index as Index, q.created_at as CreatedAt, q.question as Content, q.token_count as TokenCount, q.metadata as Metadata, q.conversation_id as IdConversation,
                     a.id as Id, a.created_at as CreatedAt, a.answer as Content, a.token_count as TokenCount, a.metadata as Metadata, a.question_id as IdQuestion
                 """)
             .From($"sessions s")

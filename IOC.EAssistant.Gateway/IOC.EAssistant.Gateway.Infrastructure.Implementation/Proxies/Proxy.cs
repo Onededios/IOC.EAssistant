@@ -7,11 +7,16 @@ namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Proxies;
 public abstract class Proxy
 {
     private readonly Uri _uri;
+    private readonly static JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
     protected Proxy(string? baseUri)
     {
         if (string.IsNullOrEmpty(baseUri))
             throw new ArgumentNullException(nameof(baseUri), "Base uri string cannot be null or empty.");
-        this._uri = new Uri(baseUri);
+        _uri = new Uri(baseUri);
     }
 
     protected async Task<TResponse> GETAsync<TResponse>(
@@ -22,6 +27,7 @@ public abstract class Proxy
     {
         var request = new HttpRequestMessage(HttpMethod.Get, BuildUri(endpoint, queryParams));
         if (headers != null) request.AddHeaders(headers);
+
         return await HandleResponse<TResponse>(request);
     }
 
@@ -43,12 +49,18 @@ public abstract class Proxy
     private Uri BuildUri(string endpoint, Dictionary<string, string>? queryParams = null)
     {
         if (string.IsNullOrWhiteSpace(endpoint)) throw new ArgumentNullException(nameof(endpoint));
-        var fullUri = this._uri.Append(endpoint).AbsoluteUri;
-        if (queryParams != null) fullUri = QueryHelpers.AddQueryString(fullUri, queryParams);
+        var fullUri = _uri.Append(endpoint).AbsoluteUri;
+        if (queryParams != null) fullUri = AddQueryParams(fullUri, queryParams);
         return new Uri(fullUri);
     }
 
-    private static StringContent BuildContent<TRequest>(TRequest body) => new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+    private static string AddQueryParams(string uri, Dictionary<string, string> queryParams)
+    {
+        IDictionary<string, string?> nullableQueryParams = queryParams.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value);
+        return QueryHelpers.AddQueryString(uri, nullableQueryParams);
+    }
+
+    private static StringContent BuildContent<TRequest>(TRequest body) => new StringContent(JsonSerializer.Serialize(body, _jsonOptions), Encoding.UTF8, "application/json");
 
     private static async Task<T> HandleResponse<T>(HttpRequestMessage request)
     {
@@ -57,7 +69,7 @@ public abstract class Proxy
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<T>(json);
+        var result = JsonSerializer.Deserialize<T>(json, _jsonOptions);
         if (result is null) throw new InvalidOperationException("Deserialization returned null.");
         return result;
     }

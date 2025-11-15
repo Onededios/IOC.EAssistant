@@ -9,9 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.WriteIndented = true;
+});
+
+builder.Services.AddRouting(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = true;
 });
 
 builder.Services.AddEndpointsApiExplorer();

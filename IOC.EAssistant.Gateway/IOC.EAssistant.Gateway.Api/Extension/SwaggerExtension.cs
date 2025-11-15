@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text.Json.Nodes;
 
 namespace IOC.EAssistant.Gateway.Api.Extension;
@@ -15,6 +16,14 @@ public static class SwaggerExtension
         services.AddSwaggerGen(opt =>
         {
             opt.SwaggerDoc(version, CreateInfoApi());
+
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            if (File.Exists(xmlPath))
+            {
+                opt.IncludeXmlComments(xmlPath);
+            }
+
             opt.MapType<JsonObject>(() => new OpenApiSchema
             {
                 Type = "object",

@@ -13,6 +13,7 @@ public static class LibraryExtension
         services.AddScoped<IServiceAnswer, ServiceAnswer>();
         services.AddScoped<IServiceQuestion, ServiceQuestion>();
         services.AddScoped<IServiceChat, ServiceChat>();
+        services.AddScoped<IServiceHealthCheck, ServiceHealthCheck>();
         return services;
     }
 }

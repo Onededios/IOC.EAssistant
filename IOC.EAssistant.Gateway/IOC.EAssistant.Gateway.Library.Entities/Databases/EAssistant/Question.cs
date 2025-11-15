@@ -7,6 +7,7 @@ public class Question : Entity
     public required Guid IdConversation { get; set; }
     public required string Content { get; set; }
     public int TokenCount { get; set; }
-    public required JsonObject Metadata { get; set; }
+    public JsonObject? Metadata { get; set; }
     public required Answer Answer { get; set; }
+    public int Index { get; set; }
 }

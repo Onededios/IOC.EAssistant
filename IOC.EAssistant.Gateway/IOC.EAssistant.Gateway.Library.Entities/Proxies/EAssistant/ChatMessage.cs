@@ -5,6 +5,6 @@ public class ChatMessage
 {
     public required int Index { get; set; }
     public required string Question { get; set; }
-    public required string Answer { get; set; }
+    public string? Answer { get; set; }
     public JsonObject? Metadata { get; set; }
 }

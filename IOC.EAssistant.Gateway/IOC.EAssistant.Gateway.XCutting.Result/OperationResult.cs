@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using IOC.EAssistant.Gateway.XCutting.Result;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
 namespace IOC.EAssistant.Gateway.XCutting.Results;
@@ -7,7 +8,7 @@ public class OperationResult
     public OperationResult()
     {
         Errors = new List<ErrorResult>();
-        Exceptions = new List<Exception>();
+        Exceptions = new List<ExceptionResult>();
     }
 
 
@@ -19,7 +20,7 @@ public class OperationResult
 #if !DEBUG
     [JsonIgnore]
 #endif
-    public List<Exception> Exceptions { get; }
+    public List<ExceptionResult> Exceptions { get; }
     [JsonIgnore]
     public bool HasErrors => Errors.Any();
     [JsonIgnore]
@@ -29,6 +30,7 @@ public class OperationResult
 public class OperationResult<TResult> : OperationResult
 {
     public OperationResult() : base() { }
+    [JsonPropertyOrder(-1)]
     public TResult? Result { get; set; }
 
     public OperationResult AddResult(TResult result)
@@ -46,14 +48,14 @@ public class OperationResult<TResult> : OperationResult
     {
         Result = result;
         Errors.Add(error);
-        if (exception != null) Exceptions.Add(exception);
+        if (exception != null) Exceptions.Add(new ExceptionResult(exception));
         return this;
     }
 
-    public OperationResult AddError(ErrorResult error, Exception? exception)
+    public OperationResult AddError(ErrorResult error, Exception? exception = null)
     {
         Errors.Add(error);
-        if (exception != null) Exceptions.Add(exception);
+        if (exception != null) Exceptions.Add(new ExceptionResult(exception));
         return this;
     }
 
@@ -68,13 +70,13 @@ public class OperationResult<TResult> : OperationResult
         if (HasExceptions) return GetServerError<T>(controller);
         else if (HasErrors) return GetBadRequest<T>(controller);
         Status = 200;
-        return controller.Ok(Result);
+        return controller.Ok(this);
     }
 
     public ActionResult<T> GetBadRequest<T>(ControllerBase controller)
     {
         Status = 400;
-        return controller.BadRequest(Errors);
+        return controller.BadRequest(this);
     }
 
     public ActionResult<T> GetServerError<T>(ControllerBase controller)

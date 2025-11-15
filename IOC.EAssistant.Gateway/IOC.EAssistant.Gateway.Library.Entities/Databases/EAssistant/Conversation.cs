@@ -3,5 +3,5 @@ public class Conversation : Entity
 {
     public required Guid IdSession { get; set; }
     public List<Question> Questions { get; set; } = new List<Question>();
-    public required string Title { get; set; }
+    public string? Title { get; set; }
 }

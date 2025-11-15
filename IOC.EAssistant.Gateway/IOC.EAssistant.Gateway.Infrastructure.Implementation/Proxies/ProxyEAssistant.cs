@@ -9,4 +9,10 @@ public class ProxyEAssistant(string? baseUri) : Proxy(baseUri), IProxyEAssistant
         var res = await POSTAsync<ChatRequest, ChatResponse>("/chat", body: body);
         return res;
     }
+
+    public async Task<HealthResponse> HealthCheckAsync()
+    {
+        var res = await GETAsync<HealthResponse>("/health");
+        return res;
+    }
 }
