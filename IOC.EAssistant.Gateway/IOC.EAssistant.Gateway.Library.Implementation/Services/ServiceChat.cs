@@ -45,11 +45,11 @@ public class ServiceChat(
     ValidatorChat _validatorChat
 ) : IServiceChat
 {
-  /// <summary>
+    /// <summary>
     /// Processes a chat request and returns the AI-generated response.
     /// </summary>
     /// <param name="request">
-/// The <see cref="ChatRequestDto"/> containing the chat messages, optional session ID,
+    /// The <see cref="ChatRequestDto"/> containing the chat messages, optional session ID,
     /// and optional conversation ID for context.
     /// </param>
     /// <returns>
@@ -104,7 +104,7 @@ public class ServiceChat(
                 return operationResult;
             }
 
-            var (conversation, messages) = await PrepareConversationContextAsync(request);
+            var (conversation, messages, isExistingConversation) = await PrepareConversationContextAsync(request);
 
             var modelResponse = await GetModelResponseAsync(request);
 
@@ -120,7 +120,7 @@ public class ServiceChat(
 
             conversation.Questions.Add(question);
 
-            var persistResult = await PersistConversation(conversation, request.SessionId);
+            var persistResult = await PersistConversation(conversation, isExistingConversation);
 
             if (persistResult.HasErrors)
             {
@@ -150,7 +150,7 @@ public class ServiceChat(
     /// <remarks>
     /// This method maps the request to the proxy format, communicates with the AI model,
     /// and validates the response before returning. Any validation errors are included
-  /// in the operation result.
+    /// in the operation result.
     /// </remarks>
     private async Task<OperationResult<ChatResponse>> GetModelResponseAsync(ChatRequestDto request)
     {
@@ -181,35 +181,44 @@ public class ServiceChat(
     /// <list type="bullet">
     /// <item><description>The <see cref="Conversation"/> entity (new or existing)</description></item>
     /// <item><description>The complete message collection including history if applicable</description></item>
+    /// <item><description>A boolean indicating whether the conversation already exists in the database</description></item>
     /// </list>
     /// </returns>
     /// <remarks>
     /// <para>
     /// This method implements intelligent context management:
     /// <list type="bullet">
-    /// <item><description>If a conversation ID is provided and only one new message exists, it retrieves the conversation history</description></item>
+    /// <item><description>If a conversation ID is provided and found, it retrieves the conversation with its history</description></item>
     /// <item><description>Historical messages are converted from Question entities to ChatMessage format</description></item>
     /// <item><description>The new message is appended with the correct index based on history length</description></item>
     /// <item><description>If no conversation ID is provided or history retrieval fails, a new conversation is created</description></item>
+    /// <item><description>For existing conversations, the original session relationship is preserved</description></item>
     /// </list>
     /// </para>
     /// <para>
-    /// The session ID from the request is used to link the conversation, or a new GUID is generated
-    /// for new sessions.
+    /// The session ID from the request is used to link new conversations, or a new GUID is generated
+    /// for new sessions. Existing conversations maintain their original session association.
     /// </para>
     /// </remarks>
-    private async Task<(Conversation conversation, IEnumerable<ChatMessage> messages)> PrepareConversationContextAsync(ChatRequestDto request)
+    private async Task<(
+        Conversation conversation,
+        IEnumerable<ChatMessage> messages,
+        bool isExistingConversation
+    )> PrepareConversationContextAsync(ChatRequestDto request)
     {
-        var conversation = ChatMapper.CreateConversationEntity(request.SessionId ?? Guid.NewGuid());
+        var sessionId = request.SessionId ?? Guid.NewGuid();
+        var conversation = ChatMapper.CreateConversationEntity(sessionId);
         var messages = request.Messages;
+        var isExistingConversation = false;
 
-        if (request.ConversationId.HasValue && request.Messages.Count() == 1)
+        if (request.ConversationId.HasValue)
         {
             var conversationRes = await _serviceConversation.GetAsync(request.ConversationId.Value);
 
             if (conversationRes.Result?.Questions != null)
             {
                 conversation = conversationRes.Result;
+                isExistingConversation = true;
                 var historicalMessages = ChatMapper.MapQuestionsToMessages(conversation.Questions);
 
                 var newMessage = messages.First();
@@ -219,41 +228,99 @@ public class ServiceChat(
                 messages = historicalMessages;
             }
         }
+        else if (request.SessionId.HasValue)
+        {
+            conversation.Id = Guid.NewGuid();
+            conversation.IdSession = request.SessionId.Value;
+            conversation.CreatedAt = DateTime.Now;
+        }
 
-        return (conversation, messages);
+        return (conversation, messages, isExistingConversation);
     }
 
     /// <summary>
-    /// Persists the conversation to the database, creating a session if necessary.
+    /// Persists the conversation and its associated session to the database.
     /// </summary>
-    /// <param name="conversation">The conversation entity to persist.</param>
-    /// <param name="sessionId">
-    /// Optional session ID. If provided, only the conversation is saved.
-    /// If null, a new session is created containing the conversation.
+    /// <param name="conversation">
+    /// The <see cref="Conversation"/> entity to persist, containing the questions and answers
+    /// from the current chat interaction.
+    /// </param>
+    /// <param name="isExistingConversation">
+    /// Indicates whether the conversation already exists in the database.
+    /// When <see langword="true"/>, the conversation is updated with new questions.
+    /// When <see langword="false"/>, this is a new conversation that needs to be created.
     /// </param>
     /// <returns>
-    /// An <see cref="OperationResult{T}"/> containing true if persistence was successful,
-    /// false with errors otherwise.
-    /// </returns>
- /// <remarks>
-    /// This method implements two persistence strategies:
+    /// An <see cref="OperationResult{T}"/> containing:
     /// <list type="bullet">
-/// <item><description>With session ID: Saves only the conversation (assumes session already exists)</description></item>
-    /// <item><description>Without session ID: Creates a new session containing the conversation and saves both</description></item>
+    /// <item><description><see langword="true"/> if the persistence operation succeeded</description></item>
+    /// <item><description><see langword="false"/> with error details if the operation failed</description></item>
     /// </list>
-    /// The choice of strategy affects the cascading save behavior in the repository layer.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This method implements a smart persistence strategy that handles three distinct scenarios:
+    /// </para>
+    /// <para>
+    /// <strong>Scenario 1: Updating an Existing Conversation</strong>
+    /// <list type="bullet">
+    /// <item><description>When <paramref name="isExistingConversation"/> is <see langword="true"/></description></item>
+    /// <item><description>Saves only the conversation entity with its new questions</description></item>
+    /// <item><description>Preserves the existing session relationship</description></item>
+    /// <item><description>Most efficient path as no session lookup or creation is needed</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <strong>Scenario 2: Creating a Conversation in a New Session</strong>
+    /// <list type="bullet">
+    /// <item><description>When the conversation is new AND its session doesn't exist</description></item>
+    /// <item><description>Creates a new session entity containing the conversation</description></item>
+    /// <item><description>Saves the session, which cascades to save the conversation</description></item>
+    /// <item><description>Establishes the parent-child relationship in a single operation</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <strong>Scenario 3: Adding a Conversation to an Existing Session</strong>
+    /// <list type="bullet">
+    /// <item><description>When the conversation is new BUT its session already exists</description></item>
+    /// <item><description>Saves only the conversation entity</description></item>
+    /// <item><description>Links to the existing session via the IdSession foreign key</description></item>
+    /// <item><description>Avoids creating duplicate sessions for the same user</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <strong>Error Handling:</strong>
+    /// Any errors from the session or conversation service operations are propagated
+    /// through the returned <see cref="OperationResult{T}"/>, allowing the caller to
+    /// handle persistence failures appropriately.
+    /// </para>
+    /// <para>
+    /// <strong>Performance Consideration:</strong>
+    /// The method performs a session existence check only for new conversations,
+    /// optimizing the common case of continuing an existing conversation.
+    /// </para>
     /// </remarks>
     private async Task<OperationResult<bool>> PersistConversation(
-        Conversation conversation,
-    Guid? sessionId
+      Conversation conversation,
+    bool isExistingConversation
     )
     {
-        if (sessionId.HasValue)
+        if (isExistingConversation)
         {
             return await _serviceConversation.SaveAsync(conversation);
         }
 
-        var session = ChatMapper.CreateSessionEntity(conversation);
-        return await _serviceSession.SaveAsync(session);
+        var sessionResult = await _serviceSession.GetAsync(conversation.IdSession);
+        var sessionExists = sessionResult.Result != null && !sessionResult.HasErrors;
+
+        if (sessionExists)
+        {
+            return await _serviceConversation.SaveAsync(conversation);
+        }
+        else
+        {
+            var newSession = ChatMapper.CreateSessionEntity(conversation);
+            return await _serviceSession.SaveAsync(newSession);
+        }
     }
 }

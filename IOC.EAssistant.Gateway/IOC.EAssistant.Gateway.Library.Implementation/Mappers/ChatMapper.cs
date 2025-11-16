@@ -133,7 +133,8 @@ public static class ChatMapper
     public static Session CreateSessionEntity(Conversation conversation) =>
         new Session
         {
-            Id = Guid.NewGuid(),
+            Id = conversation.IdSession,
+            CreatedAt = DateTime.Now,
             Conversations = new List<Conversation> { conversation }
         };
 
