@@ -19,17 +19,27 @@ public class ServiceQuestion(
 
         try
         {
-            var questionSaveCount = await _repository.SaveAsync(entity);
-            var questionSaved = questionSaveCount > 0;
+            var existingQuestion = await _repository.GetAsync(entity.Id);
+            var questionAlreadyExists = existingQuestion != null;
 
-            if (!questionSaved)
+            if (!questionAlreadyExists)
             {
-                _logger.LogWarning("Failed to save Question with ID: {QuestionId}", entity.Id);
-                operationResult.AddResult(false);
-                return operationResult;
-            }
+                var questionSaveCount = await _repository.SaveAsync(entity);
+                var questionSaved = questionSaveCount > 0;
 
-            _logger.LogInformation("Successfully saved Question with ID: {QuestionId}", entity.Id);
+                if (!questionSaved)
+                {
+                    _logger.LogWarning("Failed to save Question with ID: {QuestionId}", entity.Id);
+                    operationResult.AddResult(false);
+                    return operationResult;
+                }
+
+                _logger.LogInformation("Successfully saved Question with ID: {QuestionId}", entity.Id);
+            }
+            else
+            {
+                _logger.LogInformation("Question with ID: {QuestionId} already exists, saving only child entities", entity.Id);
+            }
 
             if (entity.Answer != null)
             {
@@ -66,26 +76,55 @@ public class ServiceQuestion(
 
         try
         {
-            var questionSaveCount = await _repository.SaveMultipleAsync(entityList);
+            var newQuestions = new List<Question>();
+            var existingQuestionsWithNewAnswers = new List<Question>();
 
-            if (questionSaveCount == 0)
+            foreach (var entity in entityList)
             {
-                _logger.LogWarning("Failed to save any Questions");
-                operationResult.AddResult(false);
-                return operationResult;
+                var existingQuestion = await _repository.GetAsync(entity.Id);
+                if (existingQuestion == null)
+                {
+                    newQuestions.Add(entity);
+                }
+                else
+                {
+                    _logger.LogInformation("Question with ID: {QuestionId} already exists, will save only new answers", entity.Id);
+                    existingQuestionsWithNewAnswers.Add(entity);
+                }
             }
 
-            _logger.LogInformation("Successfully saved {Count} Questions", questionSaveCount);
-
-            var answersToSave = entityList
-                .Where(q => q.Answer != null)
-                .Select(q => q.Answer!)
-                .ToList();
-
-            if (answersToSave.Count > 0)
+            if (newQuestions.Count > 0)
             {
-                _logger.LogInformation("Saving {Count} associated Answers", answersToSave.Count);
-                var answerResult = await _serviceAnswer.SaveMultipleAsync(answersToSave);
+                var questionSaveCount = await _repository.SaveMultipleAsync(newQuestions);
+
+                if (questionSaveCount == 0)
+                {
+                    _logger.LogWarning("Failed to save any new Questions");
+                    operationResult.AddResult(false);
+                    return operationResult;
+                }
+
+                _logger.LogInformation("Successfully saved {Count} new Questions", questionSaveCount);
+            }
+
+            var allAnswers = new List<Answer>();
+
+            allAnswers.AddRange(
+                    newQuestions
+          .Where(q => q.Answer != null)
+                .Select(q => q.Answer!)
+        );
+
+            allAnswers.AddRange(
+                   existingQuestionsWithNewAnswers
+             .Where(q => q.Answer != null)
+                        .Select(q => q.Answer!)
+                );
+
+            if (allAnswers.Count > 0)
+            {
+                _logger.LogInformation("Saving {Count} associated Answers", allAnswers.Count);
+                var answerResult = await _serviceAnswer.SaveMultipleAsync(allAnswers);
 
                 if (answerResult.HasErrors)
                 {
@@ -94,7 +133,11 @@ public class ServiceQuestion(
                     return operationResult;
                 }
 
-                _logger.LogInformation("Successfully saved {Count} Answers", answersToSave.Count);
+                _logger.LogInformation("Successfully saved {Count} Answers", allAnswers.Count);
+            }
+            else if (newQuestions.Count == 0)
+            {
+                _logger.LogInformation("All questions already exist and no new answers to save");
             }
 
             operationResult.AddResult(true);

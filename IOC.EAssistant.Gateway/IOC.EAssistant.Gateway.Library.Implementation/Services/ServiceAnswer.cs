@@ -18,6 +18,16 @@ public class ServiceAnswer(
 
         try
         {
+            var existingAnswer = await _repository.GetAsync(entity.Id);
+            var answerAlreadyExists = existingAnswer != null;
+
+            if (answerAlreadyExists)
+            {
+                _logger.LogInformation("Answer with ID: {AnswerId} already exists, skipping save", entity.Id);
+                operationResult.AddResult(true);
+                return operationResult;
+            }
+
             var answerSaveCount = await _repository.SaveAsync(entity);
             var answerSaved = answerSaveCount > 0;
 
@@ -50,16 +60,37 @@ public class ServiceAnswer(
 
         try
         {
-            var answerSaveCount = await _repository.SaveMultipleAsync(entityList);
+            var newAnswers = new List<Answer>();
+            foreach (var entity in entityList)
+            {
+                var existingAnswer = await _repository.GetAsync(entity.Id);
+                if (existingAnswer == null)
+                {
+                    newAnswers.Add(entity);
+                }
+                else
+                {
+                    _logger.LogInformation("Answer with ID: {AnswerId} already exists, skipping", entity.Id);
+                }
+            }
+
+            if (newAnswers.Count == 0)
+            {
+                _logger.LogInformation("All answers already exist, nothing to save");
+                operationResult.AddResult(true);
+                return operationResult;
+            }
+
+            var answerSaveCount = await _repository.SaveMultipleAsync(newAnswers);
 
             if (answerSaveCount == 0)
             {
-                _logger.LogWarning("Failed to save any Answers");
+                _logger.LogWarning("Failed to save any new Answers");
                 operationResult.AddResult(false);
                 return operationResult;
             }
 
-            _logger.LogInformation("Successfully saved {Count} Answers", answerSaveCount);
+            _logger.LogInformation("Successfully saved {Count} new Answers", answerSaveCount);
             operationResult.AddResult(true);
         }
         catch (Exception ex)

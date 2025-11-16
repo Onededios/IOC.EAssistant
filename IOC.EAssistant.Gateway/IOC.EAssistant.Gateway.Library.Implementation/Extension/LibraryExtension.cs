@@ -1,6 +1,6 @@
-﻿
-using IOC.EAssistant.Gateway.Library.Contracts.Services;
+﻿using IOC.EAssistant.Gateway.Library.Contracts.Services;
 using IOC.EAssistant.Gateway.Library.Implementation.Services;
+using IOC.EAssistant.Gateway.Library.Implementation.Validators;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IOC.EAssistant.Gateway.Library.Implementation.Extension;
@@ -14,6 +14,7 @@ public static class LibraryExtension
         services.AddScoped<IServiceQuestion, ServiceQuestion>();
         services.AddScoped<IServiceChat, ServiceChat>();
         services.AddScoped<IServiceHealthCheck, ServiceHealthCheck>();
+        services.AddScoped<ValidatorChat>();
         return services;
     }
 }

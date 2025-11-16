@@ -24,8 +24,24 @@ public class DatabaseEAssistantConversation(string? connectionString) : Database
             .From($"conversations c")
             .InnerJoin($"questions q ON c.id = q.conversation_id")
             .InnerJoin($"answers a ON q.id = a.question_id")
-            .Where($"c.id = {id}");
-        return await GetFirstByIdAsync(builder, Map);
+            .Where($"c.id = {id}")
+            .OrderBy($"q.index");
+
+        var results = await GetAllAsync(builder, Map);
+
+        var conversation = results?
+            .GroupBy(c => c.Id)
+            .Select(g =>
+            {
+                var first = g.First();
+                first.Questions = g
+                    .SelectMany(c => c.Questions ?? [])
+                    .DistinctBy(q => q.Id)
+                    .ToList();
+                return first;
+            }).FirstOrDefault();
+
+        return conversation;
     }
 
     public override async Task<int> SaveAsync(Conversation item)

@@ -26,8 +26,34 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
             .InnerJoin($"conversations c ON s.id = c.session_id")
             .InnerJoin($"questions q ON c.id = q.conversation_id")
             .InnerJoin($"answers a ON q.id = a.question_id")
-            .Where($"s.id = {id}");
-        return await GetFirstByIdAsync(builder, Map);
+            .Where($"s.id = {id}")
+            .OrderBy($"c.created_at, q.index");
+
+        var results = await GetAllAsync(builder, Map);
+
+        var session = results?
+            .GroupBy(s => s.Id)
+            .Select(g =>
+            {
+                var first = g.First();
+
+                var conversations = g
+                    .SelectMany(s => s.Conversations ?? [])
+                    .GroupBy(c => c.Id)
+                    .Select(cg =>
+                    {
+                        var firstConv = cg.First();
+                        firstConv.Questions = cg.SelectMany(c => c.Questions ?? [])
+                            .DistinctBy(q => q.Id)
+                            .OrderBy(q => q.Index)
+                            .ToList();
+                        return firstConv;
+                    }).ToList();
+                first.Conversations = conversations;
+                return first;
+            }).FirstOrDefault();
+
+        return session;
     }
 
     public override async Task<int> SaveAsync(Session item)

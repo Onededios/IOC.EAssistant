@@ -32,7 +32,7 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
         var builder = SimpleBuilder.CreateFluent()
             .InsertInto($"questions")
             .Columns($"id, created_at, question, token_count, metadata, conversation_id")
-            .Values($"{item.Id}, {item.CreatedAt}, {item.Content}, {item.TokenCount}, {item.Metadata}, {item.IdConversation}");
+            .Values($"{item.Id}, {item.CreatedAt}, {item.Content}, {item.TokenCount}, CAST({item.Metadata} AS jsonb), {item.IdConversation}");
 
         return await PersistAsync(builder);
     }
@@ -41,11 +41,11 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
     {
         var builder = SimpleBuilder.CreateFluent()
             .InsertInto($"questions")
-            .Columns($"id, created_at, question, token_count, metadata, conversation_id");
+            .Columns($"id, created_at, index, question, token_count, metadata, conversation_id");
 
         foreach (var item in items)
         {
-            builder.Values($"{item.Id}, {item.CreatedAt}, {item.Content}, {item.TokenCount}, {item.Metadata}, {item.IdConversation}");
+            builder.Values($"{item.Id}, {item.CreatedAt}, {item.Index}, {item.Content}, {item.TokenCount}, CAST({item.Metadata} AS jsonb), {item.IdConversation}");
         }
 
         return await PersistAsync(builder);

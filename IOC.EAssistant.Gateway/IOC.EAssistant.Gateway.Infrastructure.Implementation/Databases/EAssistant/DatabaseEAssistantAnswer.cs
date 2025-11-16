@@ -28,7 +28,7 @@ public class DatabaseEAssistantAnswer(string? connectionString) : DatabaseEAssis
         var builder = SimpleBuilder.CreateFluent()
             .InsertInto($"answers")
             .Columns($"id, created_at, question_id, answer, token_count, metadata, sources")
-            .Values($"{item.Id}, {item.CreatedAt}, {item.IdQuestion}, {item.Content}, {item.TokenCount}, {item.Metadata}, {item.Sources}");
+            .Values($"{item.Id}, {item.CreatedAt}, {item.IdQuestion}, {item.Content}, {item.TokenCount}, CAST({item.Metadata} AS jsonb), CAST({item.Sources} AS jsonb)");
         return await PersistAsync(builder);
     }
 
@@ -39,7 +39,7 @@ public class DatabaseEAssistantAnswer(string? connectionString) : DatabaseEAssis
             .Columns($"id, created_at, question_id, answer, token_count, metadata, sources");
         foreach (var item in items)
         {
-            builder.Values($"{item.Id}, {item.CreatedAt}, {item.IdQuestion}, {item.Content}, {item.TokenCount}, {item.Metadata}, {item.Sources}");
+            builder.Values($"{item.Id}, {item.CreatedAt}, {item.IdQuestion}, {item.Content}, {item.TokenCount}, CAST({item.Metadata} AS jsonb), CAST({item.Sources} AS jsonb)");
         }
 
         return await PersistAsync(builder);

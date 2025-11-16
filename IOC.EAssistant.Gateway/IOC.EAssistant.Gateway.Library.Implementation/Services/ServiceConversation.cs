@@ -20,18 +20,29 @@ public class ServiceConversation(
 
         try
         {
-            var conversationSaveCount = await _repository.SaveAsync(entity);
-            var conversationSaved = conversationSaveCount > 0;
+            var existingConversation = await _repository.GetAsync(entity.Id);
+            var conversationAlreadyExists = existingConversation != null;
 
-            if (!conversationSaved)
+            if (!conversationAlreadyExists)
             {
-                _logger.LogWarning("Failed to save Conversation with ID: {ConversationId}", entity.Id);
-                operationResult.AddResult(false);
-                return operationResult;
+                var conversationSaveCount = await _repository.SaveAsync(entity);
+                var conversationSaved = conversationSaveCount > 0;
+
+                if (!conversationSaved)
+                {
+                    _logger.LogWarning("Failed to save Conversation with ID: {ConversationId}", entity.Id);
+                    operationResult.AddResult(false);
+                    return operationResult;
+                }
+
+                _logger.LogInformation("Successfully saved Conversation with ID: {ConversationId}", entity.Id);
+            }
+            else
+            {
+                _logger.LogInformation("Conversation with ID: {ConversationId} already exists, saving only child entities", entity.Id);
             }
 
-            _logger.LogInformation("Successfully saved Conversation with ID: {ConversationId}", entity.Id);
-
+            // Save Questions regardless of whether Conversation existed or not
             if (entity.Questions != null && entity.Questions.Count > 0)
             {
                 _logger.LogInformation("Saving {Count} Questions for Conversation ID: {ConversationId}",
@@ -70,21 +81,50 @@ public class ServiceConversation(
 
         try
         {
-            var conversationSaveCount = await _repository.SaveMultipleAsync(entityList);
+            var newConversations = new List<Conversation>();
+            var existingConversationsWithNewQuestions = new List<Conversation>();
 
-            if (conversationSaveCount == 0)
+            foreach (var entity in entityList)
             {
-                _logger.LogWarning("Failed to save any Conversations");
-                operationResult.AddResult(false);
-                return operationResult;
+                var existingConversation = await _repository.GetAsync(entity.Id);
+                if (existingConversation == null)
+                {
+                    newConversations.Add(entity);
+                }
+                else
+                {
+                    _logger.LogInformation("Conversation with ID: {ConversationId} already exists, will save only new questions", entity.Id);
+                    existingConversationsWithNewQuestions.Add(entity);
+                }
             }
 
-            _logger.LogInformation("Successfully saved {Count} Conversations", conversationSaveCount);
+            if (newConversations.Count > 0)
+            {
+                var conversationSaveCount = await _repository.SaveMultipleAsync(newConversations);
 
-            var allQuestions = entityList
-                .Where(c => c.Questions != null && c.Questions.Count > 0)
-                .SelectMany(c => c.Questions)
-                .ToList();
+                if (conversationSaveCount == 0)
+                {
+                    _logger.LogWarning("Failed to save any new Conversations");
+                    operationResult.AddResult(false);
+                    return operationResult;
+                }
+
+                _logger.LogInformation("Successfully saved {Count} new Conversations", conversationSaveCount);
+            }
+
+            var allQuestions = new List<Question>();
+
+            allQuestions.AddRange(
+                newConversations
+                    .Where(c => c.Questions != null && c.Questions.Count > 0)
+                    .SelectMany(c => c.Questions)
+            );
+
+            allQuestions.AddRange(
+                existingConversationsWithNewQuestions
+                    .Where(c => c.Questions != null && c.Questions.Count > 0)
+                    .SelectMany(c => c.Questions)
+            );
 
             if (allQuestions.Count > 0)
             {
@@ -99,6 +139,10 @@ public class ServiceConversation(
                 }
 
                 _logger.LogInformation("Successfully saved {Count} Questions", allQuestions.Count);
+            }
+            else if (newConversations.Count == 0)
+            {
+                _logger.LogInformation("All conversations already exist and no new questions to save");
             }
 
             operationResult.AddResult(true);

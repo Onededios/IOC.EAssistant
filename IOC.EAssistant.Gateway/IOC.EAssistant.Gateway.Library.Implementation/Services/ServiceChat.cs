@@ -4,6 +4,8 @@ using IOC.EAssistant.Gateway.Library.Contracts.Services;
 using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 using IOC.EAssistant.Gateway.Library.Entities.Proxies.EAssistant;
 using IOC.EAssistant.Gateway.Library.Entities.Proxies.EAssistant.Chat;
+using IOC.EAssistant.Gateway.Library.Implementation.Mappers;
+using IOC.EAssistant.Gateway.Library.Implementation.Validators;
 using IOC.EAssistant.Gateway.XCutting.Results;
 using Microsoft.Extensions.Logging;
 
@@ -13,7 +15,8 @@ public class ServiceChat(
     IProxyEAssistant _proxyEAssistant,
     IServiceSession _serviceSession,
     IServiceConversation _serviceConversation,
-    IServiceHealthCheck _serviceHealthCheck
+    IServiceHealthCheck _serviceHealthCheck,
+    ValidatorChat _validatorChat
 ) : IServiceChat
 {
     public async Task<OperationResult<ChatResponseDto>> ChatAsync(ChatRequestDto request)
@@ -21,49 +24,25 @@ public class ServiceChat(
         var operationResult = new OperationResult<ChatResponseDto>();
         try
         {
-            operationResult = HandleNoRequiredParameters(operationResult, request);
-            operationResult = HandleNoMessages(operationResult, request);
-            operationResult = HandleEmptyMessage(operationResult, request);
+
+            var validationErrors = _validatorChat.ValidateRequest(request);
+            if (validationErrors.Any())
+            {
+                operationResult.AddErrors(validationErrors);
+                return operationResult;
+            }
 
             var healthCheckResult = await _serviceHealthCheck.GetModelHealthAsync();
             if (!healthCheckResult.Result)
             {
                 operationResult.AddError(new ErrorResult("EAssistant API is not available", "Model"));
                 _logger.LogError("EAssistant model API is not healthy");
-            }
-
-            if (operationResult.HasErrors)
-            {
                 return operationResult;
             }
 
-            var conversationET = new Conversation { IdSession = request.SessionId ?? Guid.NewGuid() };
+            var (conversation, messages) = await PrepareConversationContextAsync(request);
 
-            if (request.ConversationId != null && request.Messages.Count() == 1)
-            {
-                var conversationRes = await _serviceConversation.GetAsync(request.ConversationId.Value);
-
-                if (conversationRes.Result != null && conversationRes.Result.Questions != null)
-                {
-                    conversationET = conversationRes.Result;
-                    var mapped = conversationET.Questions.Select(q => new ChatMessage
-                    {
-                        Index = q.Index,
-                        Question = q.Content,
-                        Answer = q.Answer.Content,
-                        Metadata = q.Metadata
-                    }).ToList();
-
-                    var updated = request.Messages.First();
-
-                    updated.Index = mapped.Count + 1;
-
-                    mapped.Add(updated);
-                    request.Messages = mapped;
-                }
-            }
-
-            var modelResponse = await GetModelResponse(request);
+            var modelResponse = await GetModelResponseAsync(request);
 
             if (modelResponse.HasErrors)
             {
@@ -71,68 +50,21 @@ public class ServiceChat(
                 return operationResult;
             }
 
-            if (modelResponse.Result == null || !modelResponse.Result.Choices.Any())
+            var modelResult = modelResponse.Result!;
+
+            var question = ChatMapper.CreateQuestionEntity(messages.Last(), modelResult, conversation.Id);
+
+            conversation.Questions.Add(question);
+
+            var persistResult = await PersistConversation(conversation, request.SessionId);
+
+            if (persistResult.HasErrors)
             {
-                operationResult.AddError(new ErrorResult("The model provided no answers for your question.", "Model"));
+                operationResult.AddErrors(persistResult.Errors);
                 return operationResult;
             }
 
-            var modelResult = modelResponse.Result;
-
-            var currentMessage = request.Messages.ElementAt(request.Messages.Count() - 1);
-
-            var answerET = new Answer
-            {
-                IdQuestion = Guid.NewGuid(),
-                Id = Guid.NewGuid(),
-                Content = modelResult.Choices.First().Message.Content,
-                TokenCount = modelResult.Usage.CompletionTokens,
-                Metadata = modelResult.Metadata
-            };
-
-            var questionET = new Question
-            {
-                Id = answerET.IdQuestion,
-                IdConversation = conversationET.Id,
-                Content = currentMessage.Question,
-                Metadata = currentMessage.Metadata,
-                Answer = answerET,
-                TokenCount = modelResult.Usage.PromptTokens
-            };
-
-            conversationET.Questions.Add(questionET);
-
-            if (request.SessionId.HasValue)
-            {
-                var conversationSaveRes = await _serviceConversation.SaveAsync(conversationET);
-
-                if (conversationSaveRes.HasErrors)
-                {
-                    operationResult.AddErrors(conversationSaveRes.Errors);
-                    return operationResult;
-                }
-            }
-            else
-            {
-                var sessionET = new Session
-                {
-                    Id = Guid.NewGuid(),
-                    Conversations = new List<Conversation>() { conversationET }
-                };
-
-                var sessionSaveRes = await _serviceSession.SaveAsync(sessionET);
-
-                if (sessionSaveRes.HasErrors)
-                {
-                    operationResult.AddErrors(sessionSaveRes.Errors);
-                    return operationResult;
-                }
-            }
-
-
-            operationResult.AddResult(new ChatResponseDto { Choices = modelResult.Choices, Usage = modelResult.Usage });
-
-            return operationResult;
+            operationResult.AddResult(ChatMapper.MapToResponseDto(modelResult, conversation.IdSession, conversation.Id));
         }
         catch (Exception ex)
         {
@@ -143,54 +75,62 @@ public class ServiceChat(
         return operationResult;
     }
 
-    private async Task<OperationResult<ChatResponse>> GetModelResponse(ChatRequestDto request)
+    private async Task<OperationResult<ChatResponse>> GetModelResponseAsync(ChatRequestDto request)
     {
         var operationResult = new OperationResult<ChatResponse>();
 
-        var mappedRequest = new ChatRequest { Messages = request.Messages };
+        var mappedRequest = ChatMapper.MapToProxyRequest(request.Messages);
 
         var res = await _proxyEAssistant.ChatAsync(mappedRequest);
 
-        if (res != null)
+        var validationErrors = _validatorChat.ValidateModelResponse(res);
+
+        if (validationErrors.Any())
         {
-            operationResult.AddResult(res);
-        }
-        else
-        {
-            operationResult.AddError(new ErrorResult("Received null response from EAssistant model API", "Chat Response"));
-            _logger.LogError("Received null response from EAssistant model API");
+            operationResult.AddErrors(validationErrors);
+            return operationResult;
         }
 
+        operationResult.AddResult(res);
         return operationResult;
     }
 
-    private OperationResult<T> HandleNoRequiredParameters<T>(OperationResult<T> operationResult, ChatRequestDto request)
+    private async Task<(Conversation conversation, IEnumerable<ChatMessage> messages)> PrepareConversationContextAsync(ChatRequestDto request)
     {
-        if (!request.ConversationId.HasValue && !request.SessionId.HasValue)
+        var conversation = ChatMapper.CreateConversationEntity(request.SessionId ?? Guid.NewGuid());
+        var messages = request.Messages;
+
+        if (request.ConversationId.HasValue && request.Messages.Count() == 1)
         {
-            operationResult.AddError(new ErrorResult("Either ConversationId or SessionId must be provided", "Invalid Request"));
-            _logger.LogWarning("Chat request missing both ConversationId and SessionId");
+            var conversationRes = await _serviceConversation.GetAsync(request.ConversationId.Value);
+
+            if (conversationRes.Result?.Questions != null)
+            {
+                conversation = conversationRes.Result;
+                var historicalMessages = ChatMapper.MapQuestionsToMessages(conversation.Questions);
+
+                var newMessage = messages.First();
+                ChatMapper.UpdateMessageIndex(newMessage, historicalMessages.Count);
+                historicalMessages.Add(newMessage);
+
+                messages = historicalMessages;
+            }
         }
-        return operationResult;
+
+        return (conversation, messages);
     }
 
-    private OperationResult<T> HandleNoMessages<T>(OperationResult<T> operationResult, ChatRequestDto request)
+    private async Task<OperationResult<bool>> PersistConversation(
+        Conversation conversation,
+        Guid? sessionId
+    )
     {
-        if (request.Messages == null || !request.Messages.Any())
+        if (sessionId.HasValue)
         {
-            operationResult.AddError(new ErrorResult("Messages cannot be null or empty", "Invalid Request"));
-            _logger.LogWarning("Chat request contains null or empty messages");
+            return await _serviceConversation.SaveAsync(conversation);
         }
-        return operationResult;
-    }
 
-    private OperationResult<T> HandleEmptyMessage<T>(OperationResult<T> operationResult, ChatRequestDto request)
-    {
-        if (request.Messages.Any(m => string.IsNullOrWhiteSpace(m.Question)))
-        {
-            operationResult.AddError(new ErrorResult("All messages must have non-empty content", "Invalid Request"));
-            _logger.LogWarning("Chat request contains messages with empty content");
-        }
-        return operationResult;
+        var session = ChatMapper.CreateSessionEntity(conversation);
+        return await _serviceSession.SaveAsync(session);
     }
 }
