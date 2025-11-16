@@ -27,7 +27,7 @@ builder.Services.AddCORSPolicy();
 builder.Services.AddControllers();
 builder.Services.AddCustomSwagger();
 
-builder.Host.ConfigureLogging();
+builder.Host.ConfigureLogging(builder.Configuration);
 
 var app = builder.Build();
 
