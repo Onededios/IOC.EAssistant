@@ -1,10 +1,21 @@
-﻿using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
+﻿using Dapper.SimpleSqlBuilder;
 using IOC.EAssistant.Gateway.Infrastructure.Contracts.Databases;
-using Dapper.SimpleSqlBuilder;
+using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases.EAssistant;
+/// <summary>
+/// Database access layer for managing EAssistant conversations.
+/// </summary>
+/// <param name="connectionString"></param>
 public class DatabaseEAssistantConversation(string? connectionString) : DatabaseEAssistantBase<Conversation>(connectionString), IDatabaseEAssistantConversation
 {
+    /// <summary>
+    /// Deletes a conversation record with the specified identifier.
+    /// </summary>
+    /// <remarks>This method constructs a delete query for the "conversations" table and executes it
+    /// asynchronously. Ensure the specified <paramref name="id"/> corresponds to an existing record.</remarks>
+    /// <param name="id">The unique identifier of the conversation to delete.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of records deleted.</returns>
     public override async Task<int> DeleteAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
@@ -13,6 +24,16 @@ public class DatabaseEAssistantConversation(string? connectionString) : Database
         return await PersistAsync(builder);
     }
 
+    /// <summary>
+    /// Asynchronously retrieves a conversation by its unique identifier, including its associated questions and
+    /// answers.
+    /// </summary>
+    /// <remarks>The method retrieves a conversation along with its related questions and answers from the
+    /// data source. The questions and answers are grouped and associated with the conversation based on their
+    /// relationships.</remarks>
+    /// <param name="id">The unique identifier of the conversation to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the <see cref="Conversation"/>
+    /// object if found; otherwise, <see langword="null"/>.</returns>
     public override async Task<Conversation?> GetAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
@@ -44,6 +65,15 @@ public class DatabaseEAssistantConversation(string? connectionString) : Database
         return conversation;
     }
 
+    /// <summary>
+    /// Asynchronously saves the specified conversation to the database.
+    /// </summary>
+    /// <remarks>This method constructs a database query to insert the conversation's details into the
+    /// "conversations" table. Ensure that the <paramref name="item"/> contains valid data for all required fields
+    /// before calling this method.</remarks>
+    /// <param name="item">The <see cref="Conversation"/> object to be saved. Must not be <c>null</c>.</param>
+    /// <returns>A task that represents the asynchronous save operation. The task result contains the number of rows affected by
+    /// the operation.</returns>
     public override async Task<int> SaveAsync(Conversation item)
     {
         var builder = SimpleBuilder.CreateFluent()
@@ -54,6 +84,15 @@ public class DatabaseEAssistantConversation(string? connectionString) : Database
         return await PersistAsync(builder);
     }
 
+    /// <summary>
+    /// Saves multiple conversation records to the database asynchronously.
+    /// </summary>
+    /// <remarks>This method constructs and executes a batch insert operation for the provided conversation
+    /// records.  Ensure that the <paramref name="items"/> collection is not null or empty to avoid unnecessary database
+    /// operations.</remarks>
+    /// <param name="items">A collection of <see cref="Conversation"/> objects to be saved. Each object represents a conversation record.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of records successfully
+    /// saved.</returns>
     public override async Task<int> SaveMultipleAsync(IEnumerable<Conversation> items)
     {
         var builder = SimpleBuilder.CreateFluent()

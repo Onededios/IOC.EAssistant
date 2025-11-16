@@ -5,11 +5,38 @@ using IOC.EAssistant.Gateway.XCutting.Results;
 using Microsoft.Extensions.Logging;
 
 namespace IOC.EAssistant.Gateway.Library.Implementation.Services;
+
+/// <summary>
+/// Provides service operations for managing <see cref="Answer"/> entities in the data store.
+/// </summary>
+/// <remarks>
+/// This service handles the persistence of AI-generated answers, implementing duplicate detection
+/// logic to prevent saving the same answer multiple times. It extends <see cref="ServiceBase{T}"/>
+/// to provide specialized answer management functionality.
+/// </remarks>
+/// <param name="_logger">The logger instance for tracking operations and errors.</param>
+/// <param name="_repository">The database repository for Answer entity operations.</param>
 public class ServiceAnswer(
         ILogger<ServiceAnswer> _logger,
         IDatabaseEAssistantBase<Answer> _repository
     ) : ServiceBase<Answer>(_logger, _repository), IServiceAnswer
 {
+    /// <summary>
+    /// Saves a single answer entity to the data store, checking for duplicates before insertion.
+    /// </summary>
+    /// <param name="entity">The <see cref="Answer"/> entity to save.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing:
+  /// <list type="bullet">
+    /// <item><description>true if the answer was saved successfully or already exists</description></item>
+    /// <item><description>false if the save operation failed</description></item>
+    /// </list>
+/// </returns>
+    /// <remarks>
+    /// This method implements idempotent behavior by checking if an answer with the same ID
+/// already exists. If found, it skips the save operation and returns success. This prevents
+    /// duplicate answers when retrying operations or processing the same question multiple times.
+    /// </remarks>
     public override async Task<OperationResult<bool>> SaveAsync(Answer entity)
     {
         var operationResult = new OperationResult<bool>();
@@ -51,6 +78,31 @@ public class ServiceAnswer(
         return operationResult;
     }
 
+    /// <summary>
+    /// Saves multiple answer entities to the data store in a batch operation.
+    /// </summary>
+    /// <param name="entities">The collection of <see cref="Answer"/> entities to save.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing:
+    /// <list type="bullet">
+    /// <item><description>true if all new answers were saved successfully</description></item>
+    /// <item><description>false if the batch save operation failed</description></item>
+    /// </list>
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This method optimizes batch operations by:
+    /// <list type="number">
+    /// <item><description>Checking each answer against the database to detect existing entries</description></item>
+    /// <item><description>Filtering out duplicates to create a list of only new answers</description></item>
+    /// <item><description>Performing a single batch insert for all new answers</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+/// If all answers already exist in the database, the method returns success without performing
+    /// any database write operations, making it safe for idempotent scenarios.
+    /// </para>
+    /// </remarks>
     public override async Task<OperationResult<bool>> SaveMultipleAsync(IEnumerable<Answer> entities)
     {
         var operationResult = new OperationResult<bool>();

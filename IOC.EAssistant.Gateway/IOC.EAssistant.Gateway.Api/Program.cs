@@ -1,7 +1,6 @@
 using IOC.EAssistant.Gateway.Api.Extension;
 using IOC.EAssistant.Gateway.Infrastructure.Implementation.Extension;
 using IOC.EAssistant.Gateway.Library.Implementation.Extension;
-using Serilog;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

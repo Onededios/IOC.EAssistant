@@ -5,12 +5,58 @@ using IOC.EAssistant.Gateway.XCutting.Results;
 using Microsoft.Extensions.Logging;
 
 namespace IOC.EAssistant.Gateway.Library.Implementation.Services;
+
+/// <summary>
+/// Provides service operations for managing <see cref="Conversation"/> entities and their related questions.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This service implements cascading save operations to handle the parent-child relationship
+/// between conversations and questions. It ensures that when a conversation is saved, all
+/// associated questions (and their answers) are also persisted correctly.
+/// </para>
+/// <para>
+/// The service implements duplicate detection at the conversation level, allowing new questions
+/// to be added to existing conversations without re-saving the conversation itself.
+/// </para>
+/// </remarks>
+/// <param name="_logger">The logger instance for tracking operations and errors.</param>
+/// <param name="_repository">The database repository for Conversation entity operations.</param>
+/// <param name="_serviceQuestion">The question service for managing related question entities.</param>
 public class ServiceConversation(
-        ILogger<ServiceConversation> _logger,
-        IDatabaseEAssistantBase<Conversation> _repository,
-        IServiceQuestion _serviceQuestion
+      ILogger<ServiceConversation> _logger,
+    IDatabaseEAssistantBase<Conversation> _repository,
+    IServiceQuestion _serviceQuestion
     ) : ServiceBase<Conversation>(_logger, _repository), IServiceConversation
 {
+    /// <summary>
+    /// Saves a single conversation entity along with its associated questions to the data store.
+    /// </summary>
+    /// <param name="entity">The <see cref="Conversation"/> entity to save, including its questions collection.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing:
+    /// <list type="bullet">
+    /// <item><description>true if the conversation and all questions were saved successfully</description></item>
+    /// <item><description>false with errors if any save operation failed</description></item>
+    /// </list>
+    /// </returns>
+    /// <remarks>
+/// <para>
+  /// This method implements a two-phase save operation:
+    /// <list type="number">
+    /// <item><description>Checks if the conversation exists; if not, saves the conversation entity</description></item>
+  /// <item><description>Saves all questions in the conversation's Questions collection</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// If the conversation already exists, only the questions are saved. This allows adding
+    /// new questions to existing conversations without modifying the conversation record itself.
+    /// </para>
+    /// <para>
+    /// The method uses cascading saves through the question service, which in turn saves
+    /// the associated answers, maintaining referential integrity across all levels.
+    /// </para>
+    /// </remarks>
     public override async Task<OperationResult<bool>> SaveAsync(Conversation entity)
     {
         var operationResult = new OperationResult<bool>();
@@ -72,7 +118,37 @@ public class ServiceConversation(
         return operationResult;
     }
 
-    public override async Task<OperationResult<bool>> SaveMultipleAsync(IEnumerable<Conversation> entities)
+    /// <summary>
+    /// Saves multiple conversation entities along with their questions in a batch operation.
+    /// </summary>
+    /// <param name="entities">The collection of <see cref="Conversation"/> entities to save.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing:
+    /// <list type="bullet">
+    /// <item><description>true if all conversations and questions were saved successfully</description></item>
+    /// <item><description>false with errors if any save operation failed</description></item>
+  /// </list>
+    /// </returns>
+    /// <remarks>
+  /// <para>
+    /// This method optimizes batch operations by:
+    /// <list type="number">
+    /// <item><description>Separating new conversations from existing ones through existence checks</description></item>
+    /// <item><description>Performing a single batch insert for all new conversations</description></item>
+    /// <item><description>Collecting questions from both new and existing conversations</description></item>
+    /// <item><description>Saving all questions in a single batch operation</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// For existing conversations, only their new questions are saved, preventing unnecessary
+    /// conversation updates and maintaining data integrity.
+    /// </para>
+    /// <para>
+    /// If all conversations already exist and no questions need saving, the method returns
+    /// success without performing database writes, ensuring idempotent behavior.
+    /// </para>
+    /// </remarks>
+ public override async Task<OperationResult<bool>> SaveMultipleAsync(IEnumerable<Conversation> entities)
     {
         var operationResult = new OperationResult<bool>();
         var entityList = entities.ToList();

@@ -1,10 +1,21 @@
-﻿using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
+﻿using Dapper.SimpleSqlBuilder;
 using IOC.EAssistant.Gateway.Infrastructure.Contracts.Databases;
-using Dapper.SimpleSqlBuilder;
+using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases.EAssistant;
+/// <summary>
+/// Implements database operations for the <see cref="Question"/> entity.
+/// </summary>
+/// <param name="connectionString"></param>
 public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAssistantBase<Question>(connectionString), IDatabaseEAssistantQuestion
 {
+    /// <summary>
+    /// Deletes a question record with the specified identifier.
+    /// </summary>
+    /// <remarks>This method constructs a delete query for the "questions" table and executes it
+    /// asynchronously. Ensure the specified <paramref name="id"/> corresponds to an existing record.</remarks>
+    /// <param name="id">The unique identifier of the question to delete.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of records deleted.</returns>
     public override async Task<int> DeleteAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
@@ -13,6 +24,15 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
         return await PersistAsync(builder);
     }
 
+    /// <summary>
+    /// Asynchronously retrieves a question and its associated answers by the specified identifier.
+    /// </summary>
+    /// <remarks>This method retrieves a question along with its related answers from the data source. The
+    /// question and answers are mapped to their respective properties in the returned <see cref="Question"/>
+    /// object.</remarks>
+    /// <param name="id">The unique identifier of the question to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the <see cref="Question"/> object if
+    /// found; otherwise, <see langword="null"/>.</returns>
     public override async Task<Question?> GetAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
@@ -26,6 +46,15 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
         return await GetFirstByIdAsync(builder, MapQuestionAnswer);
     }
 
+    /// <summary>
+    /// Saves the specified question to the database asynchronously.
+    /// </summary>
+    /// <remarks>This method constructs a database query to insert the question's details into the "questions"
+    /// table. Ensure that the <paramref name="item"/> contains valid data, including non-null and properly formatted
+    /// fields,  to avoid database errors during execution.</remarks>
+    /// <param name="item">The <see cref="Question"/> object to be saved. Must not be <c>null</c>.</param>
+    /// <returns>A task that represents the asynchronous save operation. The task result contains the number of rows affected by
+    /// the save operation.</returns>
     public override async Task<int> SaveAsync(Question item)
     {
 
@@ -37,6 +66,12 @@ public class DatabaseEAssistantQuestion(string? connectionString) : DatabaseEAss
         return await PersistAsync(builder);
     }
 
+    /// <summary>
+    /// Saves multiple questions to the database asynchronously.
+    /// </summary>
+    /// <param name="items">The collection of <see cref="Question"/> objects to be saved. Must not be <c>null</c>.</param>
+    /// <returns>A task that represents the asynchronous save operation. The task result contains the number of rows affected by
+    /// the save operation.</returns>
     public override async Task<int> SaveMultipleAsync(IEnumerable<Question> items)
     {
         var builder = SimpleBuilder.CreateFluent()

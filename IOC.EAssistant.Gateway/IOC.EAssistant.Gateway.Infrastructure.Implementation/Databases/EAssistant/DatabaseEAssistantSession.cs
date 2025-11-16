@@ -1,10 +1,21 @@
-﻿using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
+﻿using Dapper.SimpleSqlBuilder;
 using IOC.EAssistant.Gateway.Infrastructure.Contracts.Databases;
-using Dapper.SimpleSqlBuilder;
+using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Databases.EAssistant;
+/// <summary>
+/// Represents a session in the E-Assistant database.
+/// </summary>
+/// <param name="connectionString">The connection string to the database.</param>
 public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssistantBase<Session>(connectionString), IDatabaseEAssistantSession
 {
+    /// <summary>
+    /// Deletes a session record with the specified identifier.
+    /// </summary>
+    /// <remarks>This method constructs a delete query for the "sessions" table and executes it
+    /// asynchronously. Ensure the specified <paramref name="id"/> corresponds to an existing record.</remarks>
+    /// <param name="id">The unique identifier of the session to delete.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of records deleted.</returns>
     public override async Task<int> DeleteAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
@@ -13,6 +24,15 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
         return await PersistAsync(builder);
     }
 
+    /// <summary>
+    /// Asynchronously retrieves a session by its unique identifier, including its associated conversations, questions,
+    /// and answers.
+    /// </summary>
+    /// <remarks>The retrieved session includes its conversations, each with their respective questions and
+    /// answers. The data is grouped and ordered to ensure the integrity of the hierarchical relationships.</remarks>
+    /// <param name="id">The unique identifier of the session to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the session with its associated
+    /// data, or <see langword="null"/> if no session with the specified identifier is found.</returns>
     public override async Task<Session?> GetAsync(Guid id)
     {
         var builder = SimpleBuilder.CreateFluent()
@@ -56,6 +76,15 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
         return session;
     }
 
+    /// <summary>
+    /// Saves the specified session to the database asynchronously.
+    /// </summary>
+    /// <remarks>This method constructs an SQL insert statement using the provided session data and executes
+    /// it asynchronously. Ensure that the session object contains valid data before calling this method.</remarks>
+    /// <param name="item">The session object to be saved. Must contain valid <see cref="Session.Id"/> and <see cref="Session.CreatedAt"/>
+    /// values.</param>
+    /// <returns>A task that represents the asynchronous save operation. The task result contains the number of rows affected by
+    /// the operation.</returns>
     public override async Task<int> SaveAsync(Session item)
     {
 
@@ -67,6 +96,16 @@ public class DatabaseEAssistantSession(string? connectionString) : DatabaseEAssi
         return await PersistAsync(builder);
     }
 
+    /// <summary>
+    /// Saves multiple session records to the database asynchronously.
+    /// </summary>
+    /// <remarks>This method constructs a batch insert operation for the provided session records and executes
+    /// it asynchronously. Ensure that the <paramref name="items"/> collection is not null and contains valid session
+    /// objects.</remarks>
+    /// <param name="items">A collection of <see cref="Session"/> objects to be saved. Each object represents a session to be inserted into
+    /// the database.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of records successfully
+    /// saved to the database.</returns>
     public override async Task<int> SaveMultipleAsync(IEnumerable<Session> items)
     {
         var builder = SimpleBuilder.CreateFluent()
