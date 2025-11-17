@@ -31,6 +31,7 @@ builder.Host.ConfigureLogging(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseCustomSwaggerUI();
 app.UseRouting();
 app.UseCORSPolicy(builder.Configuration);

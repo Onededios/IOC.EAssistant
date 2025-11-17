@@ -12,47 +12,36 @@ COPY ["IOC.EAssistant.Gateway.Library.Entities/IOC.EAssistant.Gateway.Library.En
 COPY ["IOC.EAssistant.Gateway.XCutting.Logging/IOC.EAssistant.Gateway.XCutting.Logging.csproj", "IOC.EAssistant.Gateway.XCutting.Logging/"]
 COPY ["IOC.EAssistant.Gateway.XCutting.Result/IOC.EAssistant.Gateway.XCutting.Result.csproj", "IOC.EAssistant.Gateway.XCutting.Result/"]
 
-# Restore dependencies
 RUN dotnet restore "IOC.EAssistant.Gateway.Api/IOC.EAssistant.Gateway.Api.csproj"
 
-# Copy all source files
 COPY . .
 
-# Build the application
 WORKDIR "/src/IOC.EAssistant.Gateway.Api"
 RUN dotnet build "IOC.EAssistant.Gateway.Api.csproj" -c Release -o /app/build
 
-# Publish stage
 FROM build AS publish
 RUN dotnet publish "IOC.EAssistant.Gateway.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
-# Create a non-root user for security
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
-# Copy published application
 COPY --from=publish /app/publish .
 
-# Change ownership of the app directory
 RUN chown -R appuser:appuser /app
 
-# Switch to non-root user
 USER appuser
 
-# Expose port
 EXPOSE 8080
-EXPOSE 8081
 
-# Environment variables for production
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
-# Entry point
 ENTRYPOINT ["dotnet", "IOC.EAssistant.Gateway.Api.dll"]
