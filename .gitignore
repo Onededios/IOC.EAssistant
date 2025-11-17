@@ -61,3 +61,7 @@ nunit-*.xml
 *.user
 /IOC.EAssistant.Gateway/.vs/ProjectEvaluation
 /IOC.EAssistant.Gateway/.vs/CopilotSnapshots
+/IOC.EAssistant.Gateway/docker-compose.secrets.yml
+/IOC.EAssistant.Gateway/docker-compose.yml
+/IOC.EAssistant.Gateway/DOCKER-DEPLOYMENT.md
+/IOC.EAssistant.Gateway/QUICK-START.md
