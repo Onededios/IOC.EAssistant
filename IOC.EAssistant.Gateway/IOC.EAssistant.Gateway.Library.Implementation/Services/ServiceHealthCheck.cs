@@ -2,6 +2,7 @@
 using IOC.EAssistant.Gateway.Library.Contracts.Services;
 using IOC.EAssistant.Gateway.Library.Entities.Base;
 using IOC.EAssistant.Gateway.XCutting.Results;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace IOC.EAssistant.Gateway.Library.Implementation.Services;
@@ -18,14 +19,15 @@ namespace IOC.EAssistant.Gateway.Library.Implementation.Services;
 /// <param name="_logger">The logger instance for tracking health check operations and errors.</param>
 /// <param name="_proxyEAssistant">The proxy for communicating with the AI model service health endpoint.</param>
 public class ServiceHealthCheck(
-  ILogger<ServiceHealthCheck> _logger,
-    IProxyEAssistant _proxyEAssistant
+    ILogger<ServiceHealthCheck> _logger,
+    IProxyEAssistant _proxyEAssistant,
+    IConfiguration _configuration
 ) : IServiceHealthCheck
 {
     /// <summary>
     /// Retrieves the overall health status of the application, including AI model availability.
     /// </summary>
- /// <returns>
+    /// <returns>
     /// An <see cref="OperationResult{T}"/> containing a <see cref="HealthResponse"/> with:
     /// <list type="bullet">
     /// <item><description>Timestamp of the health check</description></item>
@@ -43,9 +45,9 @@ public class ServiceHealthCheck(
     /// <list type="bullet">
     /// <item><description>Kubernetes liveness and readiness probes</description></item>
     /// <item><description>Load balancers for routing decisions</description></item>
-  /// <item><description>Monitoring systems for alerting</description></item>
+    /// <item><description>Monitoring systems for alerting</description></item>
     /// <item><description>DevOps dashboards for system status visualization</description></item>
-  /// </list>
+    /// </list>
     /// </para>
     /// </remarks>
     public async Task<OperationResult<HealthResponse>> GetHealthAsync()
@@ -63,6 +65,10 @@ public class ServiceHealthCheck(
             }
 
             var health = new HealthResponse { ModelAvailable = eassistantRes.Result };
+
+            _logger.LogInformation("Variable ConnStr has been loaded? {ConnStrLoaded}", _configuration["EASSISTANT_CONNSTR"] != null);
+            _logger.LogInformation("Variable Uri has been loaded? {UriLoaded}", _configuration["EASSISTANT_URI"] != null);
+            _logger.LogInformation("Variable Loki has been loaded? {LokiLoaded}", _configuration["LOKI_URL"] != null && _configuration["LOKI_USERNAME"] != null && _configuration["LOKI_PASSWORD"] != null);
 
             operationResult.AddResult(health);
         }
@@ -93,7 +99,7 @@ public class ServiceHealthCheck(
     /// </para>
     /// <para>
     /// This check is performed before processing chat requests to prevent attempting
-/// conversations when the AI model is unavailable, providing better error messages
+    /// conversations when the AI model is unavailable, providing better error messages
     /// and preventing unnecessary processing.
     /// </para>
     /// <para>
