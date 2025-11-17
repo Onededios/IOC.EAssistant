@@ -88,7 +88,6 @@ public class ServiceChat(
         var operationResult = new OperationResult<ChatResponseDto>();
         try
         {
-
             var validationErrors = _validatorChat.ValidateRequest(request);
             if (validationErrors.Any())
             {

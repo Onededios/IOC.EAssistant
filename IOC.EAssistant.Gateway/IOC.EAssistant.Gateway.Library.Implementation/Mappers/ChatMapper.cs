@@ -115,7 +115,13 @@ public static class ChatMapper
     /// as the chat interaction progresses. The conversation automatically receives a new GUID
     /// identifier and is associated with the parent session.
     /// </remarks>
-    public static Conversation CreateConversationEntity(Guid sessionId) => new Conversation { IdSession = sessionId };
+    public static Conversation CreateConversationEntity(Guid sessionId) =>
+        new Conversation
+        {
+            IdSession = sessionId,
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTime.Now
+        };
 
     /// <summary>
     /// Creates a new session entity containing the specified conversation.

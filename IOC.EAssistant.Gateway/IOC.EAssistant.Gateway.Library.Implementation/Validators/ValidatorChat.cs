@@ -46,12 +46,6 @@ public class ValidatorChat(
     /// <list type="number">
     /// <item>
     /// <description>
-    /// <strong>Context Validation:</strong> Verifies that either a ConversationId or SessionId is provided.
-    /// At least one identifier is required to establish or continue a conversation context.
-    /// </description>
-    /// </item>
-    /// <item>
-    /// <description>
     /// <strong>Messages Collection Validation:</strong> Ensures the Messages collection is not null or empty.
     /// At least one message must be provided for the chat operation to process.
     /// </description>
@@ -61,7 +55,7 @@ public class ValidatorChat(
     /// <strong>Message Content Validation:</strong> Checks that all messages contain non-empty question content.
     /// Empty or whitespace-only questions are considered invalid and cannot be processed by the AI model.
     /// </description>
-  /// </item>
+    /// </item>
     /// </list>
     /// </para>
     /// <para>
@@ -77,31 +71,25 @@ public class ValidatorChat(
     {
         var errors = new List<ErrorResult>();
 
-        if (!request.ConversationId.HasValue && !request.SessionId.HasValue)
-    {
-    errors.Add(new ErrorResult("Either ConversationId or SessionId must be provided", "Invalid Request"));
-    _logger.LogWarning("Chat request missing both ConversationId and SessionId");
-    }
-
         if (request.Messages == null || !request.Messages.Any())
         {
-         errors.Add(new ErrorResult("Messages cannot be null or empty", "Invalid Request"));
-          _logger.LogWarning("Chat request contains null or empty messages");
+            errors.Add(new ErrorResult("Messages cannot be null or empty", "Invalid Request"));
+            _logger.LogWarning("Chat request contains null or empty messages");
         }
         else if (request.Messages.Any(m => string.IsNullOrWhiteSpace(m.Question)))
         {
-       errors.Add(new ErrorResult("All messages must have non-empty content", "Invalid Request"));
-         _logger.LogWarning("Chat request contains messages with empty content");
+            errors.Add(new ErrorResult("All messages must have non-empty content", "Invalid Request"));
+            _logger.LogWarning("Chat request contains messages with empty content");
         }
 
         return errors;
-  }
+    }
 
     /// <summary>
-  /// Validates the AI model's response to ensure it contains usable data.
+    /// Validates the AI model's response to ensure it contains usable data.
     /// </summary>
     /// <param name="modelResponse">The <see cref="ChatResponse"/> received from the AI model to validate.</param>
-/// <returns>
+    /// <returns>
     /// A collection of <see cref="ErrorResult"/> objects describing any validation failures.
     /// An empty collection indicates the response is valid and contains usable data.
     /// </returns>
@@ -121,9 +109,9 @@ public class ValidatorChat(
     /// <strong>Choices Validation:</strong> Ensures the response contains at least one choice.
     /// The Choices collection contains the AI-generated responses, and an empty collection
     /// indicates the model failed to generate any content, making the response unusable.
- /// </description>
+    /// </description>
     /// </item>
- /// </list>
+    /// </list>
     /// </para>
     /// <para>
     /// Each validation failure is logged as a warning with descriptive information to aid
@@ -137,19 +125,19 @@ public class ValidatorChat(
     /// </para>
     /// </remarks>
     public IEnumerable<ErrorResult> ValidateModelResponse(ChatResponse? modelResponse)
-  {
+    {
         var errors = new List<ErrorResult>();
         if (modelResponse == null)
         {
             errors.Add(new ErrorResult("Model response is null", "Invalid Response"));
-  _logger.LogWarning("Received null model response");
+            _logger.LogWarning("Received null model response");
             return errors;
         }
         if (modelResponse.Choices == null || !modelResponse.Choices.Any())
         {
-   errors.Add(new ErrorResult("Model response contains no choices", "Invalid Response"));
-       _logger.LogWarning("Model response contains no choices");
+            errors.Add(new ErrorResult("Model response contains no choices", "Invalid Response"));
+            _logger.LogWarning("Model response contains no choices");
         }
         return errors;
-  }
+    }
 }
