@@ -40,6 +40,8 @@ public class ServiceSession(
     /// <item><description>false with errors if any save operation in the hierarchy failed</description></item>
     /// </list>
     /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when database operation fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when database operation times out.</exception>
     /// <remarks>
     /// <para>
     /// This method implements a multi-level cascading save operation:
@@ -59,8 +61,9 @@ public class ServiceSession(
     /// only the session entity, allowing for incremental session construction.
     /// </para>
     /// <para>
-    /// Any failure at any level of the hierarchy is propagated up through the error result,
-    /// with descriptive messages indicating which entity type failed to save.
+    /// Business logic errors (save failures, validation errors) are captured in the operation
+    /// result. Infrastructure exceptions (database timeouts, connection failures) are allowed
+    /// to propagate to exception middleware for proper error handling and logging.
     /// </para>
     /// </remarks>
     public override async Task<OperationResult<bool>> SaveAsync(Session entity)
@@ -69,46 +72,36 @@ public class ServiceSession(
 
         _logger.LogInformation("Saving Session with ID: {SessionId}", entity.Id);
 
-        try
-        {
-            var sessionSaveCount = await _repository.SaveAsync(entity);
-            var sessionSaved = sessionSaveCount > 0;
+        var sessionSaveCount = await _repository.SaveAsync(entity);
+        var sessionSaved = sessionSaveCount > 0;
 
-            if (!sessionSaved)
+        if (!sessionSaved)
+        {
+            _logger.LogWarning("Failed to save Session with ID: {SessionId}", entity.Id);
+            operationResult.AddResult(false);
+            return operationResult;
+        }
+
+        _logger.LogInformation("Successfully saved Session with ID: {SessionId}", entity.Id);
+
+        if (entity.Conversations != null && entity.Conversations.Count > 0)
+        {
+            _logger.LogInformation("Saving {Count} Conversations for Session ID: {SessionId}",
+                entity.Conversations.Count, entity.Id);
+
+            var conversationsResult = await _serviceConversation.SaveMultipleAsync(entity.Conversations);
+
+            if (conversationsResult.HasErrors)
             {
-                _logger.LogWarning("Failed to save Session with ID: {SessionId}", entity.Id);
-                operationResult.AddResult(false);
+                _logger.LogError("Failed to save Conversations for Session ID: {SessionId}", entity.Id);
+                operationResult.AddResultWithError(false, ActionSavingResult<Session, Conversation>(), -1, null);
                 return operationResult;
             }
 
-            _logger.LogInformation("Successfully saved Session with ID: {SessionId}", entity.Id);
-
-            if (entity.Conversations != null && entity.Conversations.Count > 0)
-            {
-                _logger.LogInformation("Saving {Count} Conversations for Session ID: {SessionId}",
-                    entity.Conversations.Count, entity.Id);
-
-                var conversationsResult = await _serviceConversation.SaveMultipleAsync(entity.Conversations);
-
-                if (conversationsResult.HasErrors)
-                {
-                    _logger.LogError("Failed to save Conversations for Session ID: {SessionId}", entity.Id);
-                    operationResult.AddResultWithError(false, ActionSavingResult<Session, Conversation>(), -1, null);
-                    return operationResult;
-                }
-
-                _logger.LogInformation("Successfully saved {Count} Conversations for Session ID: {SessionId}",
-                    entity.Conversations.Count, entity.Id);
-            }
-
-            operationResult.AddResult(true);
-        }
-        catch (Exception ex)
-        {
-            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving Session with ID: {SessionId}", entity.Id);
+            _logger.LogInformation("Successfully saved {Count} Conversations for Session ID: {SessionId}", entity.Conversations.Count, entity.Id);
         }
 
+        operationResult.AddResult(true);
         return operationResult;
     }
 
@@ -123,6 +116,8 @@ public class ServiceSession(
     /// <item><description>false with errors if any save operation failed</description></item>
     /// </list>
     /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when database operation fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when database operation times out.</exception>
     /// <remarks>
     /// <para>
     /// This method optimizes batch operations by:
@@ -145,6 +140,9 @@ public class ServiceSession(
     /// The method validates the session save count to ensure all sessions were persisted before
     /// proceeding to conversation saves, maintaining atomicity within each level of the hierarchy.
     /// </para>
+    /// <para>
+    /// Infrastructure exceptions are allowed to propagate to middleware for proper error handling.
+    /// </para>
     /// </remarks>
     public override async Task<OperationResult<bool>> SaveMultipleAsync(IEnumerable<Session> entities)
     {
@@ -153,47 +151,38 @@ public class ServiceSession(
 
         _logger.LogInformation("Saving {Count} Sessions", entityList.Count);
 
-        try
-        {
-            var sessionSaveCount = await _repository.SaveMultipleAsync(entityList);
+        var sessionSaveCount = await _repository.SaveMultipleAsync(entityList);
 
-            if (sessionSaveCount == 0)
+        if (sessionSaveCount == 0)
+        {
+            _logger.LogWarning("Failed to save any Sessions");
+            operationResult.AddResult(false);
+            return operationResult;
+        }
+
+        _logger.LogInformation("Successfully saved {Count} Sessions", sessionSaveCount);
+
+        var allConversations = entityList
+            .Where(s => s.Conversations != null && s.Conversations.Count > 0)
+            .SelectMany(s => s.Conversations)
+            .ToList();
+
+        if (allConversations.Count > 0)
+        {
+            _logger.LogInformation("Saving {Count} Conversations across all Sessions", allConversations.Count);
+            var conversationsResult = await _serviceConversation.SaveMultipleAsync(allConversations);
+
+            if (conversationsResult.HasErrors)
             {
-                _logger.LogWarning("Failed to save any Sessions");
-                operationResult.AddResult(false);
+                _logger.LogError("Failed to save some or all Conversations");
+                operationResult.AddResultWithError(false, ActionSavingResult<Session, Conversation>(), -1, null);
                 return operationResult;
             }
 
-            _logger.LogInformation("Successfully saved {Count} Sessions", sessionSaveCount);
-
-            var allConversations = entityList
-                .Where(s => s.Conversations != null && s.Conversations.Count > 0)
-                .SelectMany(s => s.Conversations)
-                .ToList();
-
-            if (allConversations.Count > 0)
-            {
-                _logger.LogInformation("Saving {Count} Conversations across all Sessions", allConversations.Count);
-                var conversationsResult = await _serviceConversation.SaveMultipleAsync(allConversations);
-
-                if (conversationsResult.HasErrors)
-                {
-                    _logger.LogError("Failed to save some or all Conversations");
-                    operationResult.AddResultWithError(false, ActionSavingResult<Session, Conversation>(), -1, null);
-                    return operationResult;
-                }
-
-                _logger.LogInformation("Successfully saved {Count} Conversations", allConversations.Count);
-            }
-
-            operationResult.AddResult(true);
-        }
-        catch (Exception ex)
-        {
-            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving multiple Sessions");
+            _logger.LogInformation("Successfully saved {Count} Conversations", allConversations.Count);
         }
 
+        operationResult.AddResult(true);
         return operationResult;
     }
 }

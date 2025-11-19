@@ -31,6 +31,8 @@ builder.Host.ConfigureLogging(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseGlobalExceptionHandler();
+
 app.UseForwardedHeaders();
 app.UseCustomSwaggerUI();
 app.UseRouting();

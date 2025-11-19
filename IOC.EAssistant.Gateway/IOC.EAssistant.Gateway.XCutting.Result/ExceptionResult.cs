@@ -1,4 +1,4 @@
-﻿namespace IOC.EAssistant.Gateway.XCutting.Result;
+﻿namespace IOC.EAssistant.Gateway.XCutting.Results;
 
 /// <summary>
 /// Represents exception information extracted from an <see cref="Exception"/> for serialization and logging purposes.

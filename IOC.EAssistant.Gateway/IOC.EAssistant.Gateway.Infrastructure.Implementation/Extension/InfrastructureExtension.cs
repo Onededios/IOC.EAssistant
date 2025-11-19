@@ -7,6 +7,7 @@ using IOC.EAssistant.Gateway.Infrastructure.Implementation.Proxies;
 using IOC.EAssistant.Gateway.Library.Entities.Databases.EAssistant;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Extension;
 public static class InfrastructureExtension
@@ -31,12 +32,13 @@ public static class InfrastructureExtension
         services.AddScoped<IDatabaseEAssistantSession>(sp => sp.GetRequiredService<DatabaseEAssistantSession>());
         services.AddScoped<IDatabaseEAssistantBase<Session>>(sp => sp.GetRequiredService<DatabaseEAssistantSession>());
 
+        services.AddHttpClient();
 
-
-        services.AddScoped<IProxyEAssistant, ProxyEAssistant>(c =>
+        services.AddScoped<IProxyEAssistant, ProxyEAssistant>(sp =>
         {
             var uri = configuration["EASSISTANT_URI"];
-            return new ProxyEAssistant(uri);
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            return new ProxyEAssistant(uri, httpClientFactory);
         });
 
         SqlMapper.AddTypeHandler(new JsonObjectTypeHandler());

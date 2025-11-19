@@ -81,9 +81,15 @@ public static class ChatMapper
     /// The resulting message collection can be sent to the AI model to provide conversation
     /// context, enabling coherent multi-turn interactions.
     /// </para>
+    /// <para>
+    /// Questions without associated answers are filtered out to ensure data integrity and
+    /// prevent null reference exceptions.
+    /// </para>
     /// </remarks>
     public static List<ChatMessage> MapQuestionsToMessages(IEnumerable<Question> questions) =>
-        questions.Select(q => new ChatMessage
+        questions
+        .Where(q => q.Answer != null)
+        .Select(q => new ChatMessage
         {
             Index = q.Index,
             Question = q.Content,
@@ -154,6 +160,7 @@ public static class ChatMapper
     /// A <see cref="Question"/> entity with a nested <see cref="Answer"/> entity, both populated
     /// with content, metadata, token counts, and proper relationship identifiers.
     /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when the model response contains no choices.</exception>
     /// <remarks>
     /// <para>
     /// This method performs a complex transformation that:
@@ -175,8 +182,11 @@ public static class ChatMapper
     public static Question CreateQuestionEntity(
         ChatMessage message,
         ChatResponse modelResult,
-        Guid conversationId)
+        Guid conversationId
+    )
     {
+        var firstChoice = modelResult.Choices?.FirstOrDefault() ?? throw new InvalidOperationException("Model response must contain at least one choice.");
+
         var questionId = Guid.NewGuid();
 
         var answer = new Answer
@@ -184,7 +194,7 @@ public static class ChatMapper
             CreatedAt = DateTime.Now,
             IdQuestion = questionId,
             Id = Guid.NewGuid(),
-            Content = modelResult.Choices.First().Message.Content,
+            Content = firstChoice.Message.Content,
             TokenCount = modelResult.Usage.CompletionTokens,
             Metadata = modelResult.Metadata
         };

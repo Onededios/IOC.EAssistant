@@ -27,15 +27,18 @@ public class ServiceAnswer(
     /// <param name="entity">The <see cref="Answer"/> entity to save.</param>
     /// <returns>
     /// An <see cref="OperationResult{T}"/> containing:
-  /// <list type="bullet">
+    /// <list type="bullet">
     /// <item><description>true if the answer was saved successfully or already exists</description></item>
     /// <item><description>false if the save operation failed</description></item>
     /// </list>
-/// </returns>
+    /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when database operation fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when database operation times out.</exception>
     /// <remarks>
     /// This method implements idempotent behavior by checking if an answer with the same ID
-/// already exists. If found, it skips the save operation and returns success. This prevents
+    /// already exists. If found, it skips the save operation and returns success. This prevents
     /// duplicate answers when retrying operations or processing the same question multiple times.
+    /// Infrastructure exceptions are allowed to propagate to middleware for proper error handling.
     /// </remarks>
     public override async Task<OperationResult<bool>> SaveAsync(Answer entity)
     {
@@ -43,37 +46,29 @@ public class ServiceAnswer(
 
         _logger.LogInformation("Saving Answer for Question ID: {QuestionId}", entity.IdQuestion);
 
-        try
+        var existingAnswer = await _repository.GetAsync(entity.Id);
+        var answerAlreadyExists = existingAnswer != null;
+
+        if (answerAlreadyExists)
         {
-            var existingAnswer = await _repository.GetAsync(entity.Id);
-            var answerAlreadyExists = existingAnswer != null;
-
-            if (answerAlreadyExists)
-            {
-                _logger.LogInformation("Answer with ID: {AnswerId} already exists, skipping save", entity.Id);
-                operationResult.AddResult(true);
-                return operationResult;
-            }
-
-            var answerSaveCount = await _repository.SaveAsync(entity);
-            var answerSaved = answerSaveCount > 0;
-
-            if (!answerSaved)
-            {
-                _logger.LogWarning("Failed to save Answer for Question ID: {QuestionId}", entity.IdQuestion);
-                operationResult.AddResult(false);
-                return operationResult;
-            }
-
-            _logger.LogInformation("Successfully saved Answer with ID: {AnswerId} for Question ID: {QuestionId}",
-                entity.Id, entity.IdQuestion);
+            _logger.LogInformation("Answer with ID: {AnswerId} already exists, skipping save", entity.Id);
             operationResult.AddResult(true);
+            return operationResult;
         }
-        catch (Exception ex)
+
+        var answerSaveCount = await _repository.SaveAsync(entity);
+        var answerSaved = answerSaveCount > 0;
+
+        if (!answerSaved)
         {
-            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving Answer for Question ID: {QuestionId}", entity.IdQuestion);
+            _logger.LogWarning("Failed to save Answer for Question ID: {QuestionId}", entity.IdQuestion);
+            operationResult.AddResult(false);
+            return operationResult;
         }
+
+        _logger.LogInformation("Successfully saved Answer with ID: {AnswerId} for Question ID: {QuestionId}",
+            entity.Id, entity.IdQuestion);
+        operationResult.AddResult(true);
 
         return operationResult;
     }
@@ -89,6 +84,8 @@ public class ServiceAnswer(
     /// <item><description>false if the batch save operation failed</description></item>
     /// </list>
     /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when database operation fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when database operation times out.</exception>
     /// <remarks>
     /// <para>
     /// This method optimizes batch operations by:
@@ -99,8 +96,11 @@ public class ServiceAnswer(
     /// </list>
     /// </para>
     /// <para>
-/// If all answers already exist in the database, the method returns success without performing
+    /// If all answers already exist in the database, the method returns success without performing
     /// any database write operations, making it safe for idempotent scenarios.
+    /// </para>
+    /// <para>
+    /// Infrastructure exceptions are allowed to propagate to middleware for proper error handling.
     /// </para>
     /// </remarks>
     public override async Task<OperationResult<bool>> SaveMultipleAsync(IEnumerable<Answer> entities)
@@ -110,46 +110,38 @@ public class ServiceAnswer(
 
         _logger.LogInformation("Saving {Count} Answers", entityList.Count);
 
-        try
+        var newAnswers = new List<Answer>();
+        foreach (var entity in entityList)
         {
-            var newAnswers = new List<Answer>();
-            foreach (var entity in entityList)
+            var existingAnswer = await _repository.GetAsync(entity.Id);
+            if (existingAnswer == null)
             {
-                var existingAnswer = await _repository.GetAsync(entity.Id);
-                if (existingAnswer == null)
-                {
-                    newAnswers.Add(entity);
-                }
-                else
-                {
-                    _logger.LogInformation("Answer with ID: {AnswerId} already exists, skipping", entity.Id);
-                }
+                newAnswers.Add(entity);
             }
-
-            if (newAnswers.Count == 0)
+            else
             {
-                _logger.LogInformation("All answers already exist, nothing to save");
-                operationResult.AddResult(true);
-                return operationResult;
+                _logger.LogInformation("Answer with ID: {AnswerId} already exists, skipping", entity.Id);
             }
+        }
 
-            var answerSaveCount = await _repository.SaveMultipleAsync(newAnswers);
-
-            if (answerSaveCount == 0)
-            {
-                _logger.LogWarning("Failed to save any new Answers");
-                operationResult.AddResult(false);
-                return operationResult;
-            }
-
-            _logger.LogInformation("Successfully saved {Count} new Answers", answerSaveCount);
+        if (newAnswers.Count == 0)
+        {
+            _logger.LogInformation("All answers already exist, nothing to save");
             operationResult.AddResult(true);
+            return operationResult;
         }
-        catch (Exception ex)
+
+        var answerSaveCount = await _repository.SaveMultipleAsync(newAnswers);
+
+        if (answerSaveCount == 0)
         {
-            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving multiple Answers");
+            _logger.LogWarning("Failed to save any new Answers");
+            operationResult.AddResult(false);
+            return operationResult;
         }
+
+        _logger.LogInformation("Successfully saved {Count} new Answers", answerSaveCount);
+        operationResult.AddResult(true);
 
         return operationResult;
     }

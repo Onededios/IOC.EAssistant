@@ -314,9 +314,9 @@ public abstract class DatabaseContext<T>
     /// <returns>A task that represents the asynchronous operation. The task result contains an enumerable collection of
     /// records of type <typeparamref name="T"/> that match the query.</returns>
     protected async Task<IEnumerable<T>> GetAllAsync<T2, T3, T4, T5>(
-IFluentSqlBuilder command,
- Func<T, T2, T3, T4, T5, T> map,
-  string splitOn = "Id"
+        IFluentSqlBuilder command,
+        Func<T, T2, T3, T4, T5, T> map,
+        string splitOn = "Id"
     )
     {
         using (var conn = CreateConnection())
@@ -374,8 +374,8 @@ IFluentSqlBuilder command,
     /// records of type <typeparamref name="T"/> that match the query.</returns>
     protected async Task<IEnumerable<T>> GetAllAsync<T2, T3, T4, T5, T6, T7>(
         IFluentSqlBuilder command,
-Func<T, T2, T3, T4, T5, T6, T7, T> map,
-   string splitOn = "Id"
+        Func<T, T2, T3, T4, T5, T6, T7, T> map,
+        string splitOn = "Id"
     )
     {
         using (var conn = CreateConnection())

@@ -1,5 +1,6 @@
 ﻿using IOC.EAssistant.Gateway.Infrastructure.Implementation.Extension;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Http;
 using System.Text;
 using System.Text.Json;
 
@@ -12,10 +13,12 @@ namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Proxies;
 /// This class handles HTTP communication with external services, including request building, 
 /// JSON serialization/deserialization, and response handling. All derived proxy classes inherit 
 /// these capabilities with consistent JSON formatting and error handling.
+/// Uses <see cref="IHttpClientFactory"/> for efficient HTTP client management and socket reuse.
 /// </remarks>
 public abstract class Proxy
 {
     private readonly Uri _uri;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly static JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -23,15 +26,17 @@ public abstract class Proxy
     };
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Proxy"/> class with the specified base URI.
+    /// Initializes a new instance of the <see cref="Proxy"/> class with the specified base URI and HTTP client factory.
     /// </summary>
     /// <param name="baseUri">The base URI for the external service. Must be a valid, non-empty URI string.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="baseUri"/> is null or empty.</exception>
-    protected Proxy(string? baseUri)
+    /// <param name="httpClientFactory">The HTTP client factory for creating HTTP clients.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="baseUri"/> is null or empty, or when <paramref name="httpClientFactory"/> is null.</exception>
+    protected Proxy(string? baseUri, IHttpClientFactory httpClientFactory)
     {
         if (string.IsNullOrEmpty(baseUri))
             throw new ArgumentNullException(nameof(baseUri), "Base uri string cannot be null or empty.");
         _uri = new Uri(baseUri);
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     }
 
     /// <summary>
@@ -127,12 +132,13 @@ public abstract class Proxy
     /// <exception cref="HttpRequestException">Thrown when the HTTP response indicates failure (non-success status code).</exception>
     /// <exception cref="InvalidOperationException">Thrown when deserialization returns null.</exception>
     /// <remarks>
-    /// This method creates a new <see cref="HttpClient"/> for each request, sends the request, 
-    /// ensures the response has a success status code, and deserializes the JSON response body.
+    /// This method uses <see cref="IHttpClientFactory"/> to create HTTP clients, which manages the lifecycle 
+    /// of <see cref="HttpClient"/> instances and prevents socket exhaustion by reusing connections.
+    /// The method sends the request, ensures the response has a success status code, and deserializes the JSON response body.
     /// </remarks>
-    private static async Task<T> HandleResponse<T>(HttpRequestMessage request)
+    private async Task<T> HandleResponse<T>(HttpRequestMessage request)
     {
-        var client = new HttpClient();
+        var client = _httpClientFactory.CreateClient();
         using var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 

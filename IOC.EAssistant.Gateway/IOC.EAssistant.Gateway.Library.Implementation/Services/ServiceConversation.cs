@@ -40,12 +40,14 @@ public class ServiceConversation(
     /// <item><description>false with errors if any save operation failed</description></item>
     /// </list>
     /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when database operation fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when database operation times out.</exception>
     /// <remarks>
-/// <para>
-  /// This method implements a two-phase save operation:
+    /// <para>
+    /// This method implements a two-phase save operation:
     /// <list type="number">
     /// <item><description>Checks if the conversation exists; if not, saves the conversation entity</description></item>
-  /// <item><description>Saves all questions in the conversation's Questions collection</description></item>
+    /// <item><description>Saves all questions in the conversation's Questions collection</description></item>
     /// </list>
     /// </para>
     /// <para>
@@ -56,65 +58,56 @@ public class ServiceConversation(
     /// The method uses cascading saves through the question service, which in turn saves
     /// the associated answers, maintaining referential integrity across all levels.
     /// </para>
+    /// <para>
+    /// Infrastructure exceptions are allowed to propagate to middleware for proper error handling.
+    /// </para>
     /// </remarks>
     public override async Task<OperationResult<bool>> SaveAsync(Conversation entity)
     {
         var operationResult = new OperationResult<bool>();
 
-        _logger.LogInformation("Saving Conversation with ID: {ConversationId} for Session ID: {SessionId}",
-            entity.Id, entity.IdSession);
+        _logger.LogInformation("Saving Conversation with ID: {ConversationId} for Session ID: {SessionId}", entity.Id, entity.IdSession);
 
-        try
+        var existingConversation = await _repository.GetAsync(entity.Id);
+        var conversationAlreadyExists = existingConversation != null;
+
+        if (!conversationAlreadyExists)
         {
-            var existingConversation = await _repository.GetAsync(entity.Id);
-            var conversationAlreadyExists = existingConversation != null;
+            var conversationSaveCount = await _repository.SaveAsync(entity);
+            var conversationSaved = conversationSaveCount > 0;
 
-            if (!conversationAlreadyExists)
+            if (!conversationSaved)
             {
-                var conversationSaveCount = await _repository.SaveAsync(entity);
-                var conversationSaved = conversationSaveCount > 0;
-
-                if (!conversationSaved)
-                {
-                    _logger.LogWarning("Failed to save Conversation with ID: {ConversationId}", entity.Id);
-                    operationResult.AddResult(false);
-                    return operationResult;
-                }
-
-                _logger.LogInformation("Successfully saved Conversation with ID: {ConversationId}", entity.Id);
-            }
-            else
-            {
-                _logger.LogInformation("Conversation with ID: {ConversationId} already exists, saving only child entities", entity.Id);
+                _logger.LogWarning("Failed to save Conversation with ID: {ConversationId}", entity.Id);
+                operationResult.AddResult(false);
+                return operationResult;
             }
 
-            // Save Questions regardless of whether Conversation existed or not
-            if (entity.Questions != null && entity.Questions.Count > 0)
-            {
-                _logger.LogInformation("Saving {Count} Questions for Conversation ID: {ConversationId}",
-                    entity.Questions.Count, entity.Id);
-
-                var questionsResult = await _serviceQuestion.SaveMultipleAsync(entity.Questions);
-
-                if (questionsResult.HasErrors)
-                {
-                    _logger.LogError("Failed to save Questions for Conversation ID: {ConversationId}", entity.Id);
-                    operationResult.AddResultWithError(false, ActionSavingResult<Question, Answer>(), -1, null);
-                    return operationResult;
-                }
-
-                _logger.LogInformation("Successfully saved {Count} Questions for Conversation ID: {ConversationId}",
-                    entity.Questions.Count, entity.Id);
-            }
-
-            operationResult.AddResult(true);
+            _logger.LogInformation("Successfully saved Conversation with ID: {ConversationId}", entity.Id);
         }
-        catch (Exception ex)
+        else
         {
-            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving Conversation with ID: {ConversationId}", entity.Id);
+            _logger.LogInformation("Conversation with ID: {ConversationId} already exists, saving only child entities", entity.Id);
         }
 
+        if (entity.Questions != null && entity.Questions.Count > 0)
+        {
+            _logger.LogInformation("Saving {Count} Questions for Conversation ID: {ConversationId}",
+             entity.Questions.Count, entity.Id);
+
+            var questionsResult = await _serviceQuestion.SaveMultipleAsync(entity.Questions);
+
+            if (questionsResult.HasErrors)
+            {
+                _logger.LogError("Failed to save Questions for Conversation ID: {ConversationId}", entity.Id);
+                operationResult.AddResultWithError(false, ActionSavingResult<Question, Answer>(), -1, null);
+                return operationResult;
+            }
+
+            _logger.LogInformation("Successfully saved {Count} Questions for Conversation ID: {ConversationId}", entity.Questions.Count, entity.Id);
+        }
+
+        operationResult.AddResult(true);
         return operationResult;
     }
 
@@ -127,10 +120,12 @@ public class ServiceConversation(
     /// <list type="bullet">
     /// <item><description>true if all conversations and questions were saved successfully</description></item>
     /// <item><description>false with errors if any save operation failed</description></item>
-  /// </list>
+    /// </list>
     /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when database operation fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when database operation times out.</exception>
     /// <remarks>
-  /// <para>
+    /// <para>
     /// This method optimizes batch operations by:
     /// <list type="number">
     /// <item><description>Separating new conversations from existing ones through existence checks</description></item>
@@ -147,88 +142,82 @@ public class ServiceConversation(
     /// If all conversations already exist and no questions need saving, the method returns
     /// success without performing database writes, ensuring idempotent behavior.
     /// </para>
+    /// <para>
+    /// Infrastructure exceptions are allowed to propagate to middleware for proper error handling.
+    /// </para>
     /// </remarks>
- public override async Task<OperationResult<bool>> SaveMultipleAsync(IEnumerable<Conversation> entities)
+    public override async Task<OperationResult<bool>> SaveMultipleAsync(IEnumerable<Conversation> entities)
     {
         var operationResult = new OperationResult<bool>();
         var entityList = entities.ToList();
 
         _logger.LogInformation("Saving {Count} Conversations", entityList.Count);
 
-        try
+        var newConversations = new List<Conversation>();
+        var existingConversationsWithNewQuestions = new List<Conversation>();
+
+        foreach (var entity in entityList)
         {
-            var newConversations = new List<Conversation>();
-            var existingConversationsWithNewQuestions = new List<Conversation>();
-
-            foreach (var entity in entityList)
+            var existingConversation = await _repository.GetAsync(entity.Id);
+            if (existingConversation == null)
             {
-                var existingConversation = await _repository.GetAsync(entity.Id);
-                if (existingConversation == null)
-                {
-                    newConversations.Add(entity);
-                }
-                else
-                {
-                    _logger.LogInformation("Conversation with ID: {ConversationId} already exists, will save only new questions", entity.Id);
-                    existingConversationsWithNewQuestions.Add(entity);
-                }
+                newConversations.Add(entity);
             }
-
-            if (newConversations.Count > 0)
+            else
             {
-                var conversationSaveCount = await _repository.SaveMultipleAsync(newConversations);
-
-                if (conversationSaveCount == 0)
-                {
-                    _logger.LogWarning("Failed to save any new Conversations");
-                    operationResult.AddResult(false);
-                    return operationResult;
-                }
-
-                _logger.LogInformation("Successfully saved {Count} new Conversations", conversationSaveCount);
+                _logger.LogInformation("Conversation with ID: {ConversationId} already exists, will save only new questions", entity.Id);
+                existingConversationsWithNewQuestions.Add(entity);
             }
-
-            var allQuestions = new List<Question>();
-
-            allQuestions.AddRange(
-                newConversations
-                    .Where(c => c.Questions != null && c.Questions.Count > 0)
-                    .SelectMany(c => c.Questions)
-            );
-
-            allQuestions.AddRange(
-                existingConversationsWithNewQuestions
-                    .Where(c => c.Questions != null && c.Questions.Count > 0)
-                    .SelectMany(c => c.Questions)
-            );
-
-            if (allQuestions.Count > 0)
-            {
-                _logger.LogInformation("Saving {Count} Questions across all Conversations", allQuestions.Count);
-                var questionsResult = await _serviceQuestion.SaveMultipleAsync(allQuestions);
-
-                if (questionsResult.HasErrors)
-                {
-                    _logger.LogError("Failed to save some or all Questions");
-                    operationResult.AddResultWithError(false, ActionSavingResult<Conversation, Question>(), -1, null);
-                    return operationResult;
-                }
-
-                _logger.LogInformation("Successfully saved {Count} Questions", allQuestions.Count);
-            }
-            else if (newConversations.Count == 0)
-            {
-                _logger.LogInformation("All conversations already exist and no new questions to save");
-            }
-
-            operationResult.AddResult(true);
-        }
-        catch (Exception ex)
-        {
-            operationResult.AddResultWithError(false, ActionErrorResult("saving"), -1, ex);
-            _logger.LogError(ex, "Error saving multiple Conversations");
         }
 
+        if (newConversations.Count > 0)
+        {
+            var conversationSaveCount = await _repository.SaveMultipleAsync(newConversations);
+
+            if (conversationSaveCount == 0)
+            {
+                _logger.LogWarning("Failed to save any new Conversations");
+                operationResult.AddResult(false);
+                return operationResult;
+            }
+
+            _logger.LogInformation("Successfully saved {Count} new Conversations", conversationSaveCount);
+        }
+
+        var allQuestions = new List<Question>();
+
+        allQuestions.AddRange(
+            newConversations
+            .Where(c => c.Questions != null && c.Questions.Count > 0)
+            .SelectMany(c => c.Questions)
+        );
+
+        allQuestions.AddRange(
+            existingConversationsWithNewQuestions
+            .Where(c => c.Questions != null && c.Questions.Count > 0)
+            .SelectMany(c => c.Questions)
+        );
+
+        if (allQuestions.Count > 0)
+        {
+            _logger.LogInformation("Saving {Count} Questions across all Conversations", allQuestions.Count);
+            var questionsResult = await _serviceQuestion.SaveMultipleAsync(allQuestions);
+
+            if (questionsResult.HasErrors)
+            {
+                _logger.LogError("Failed to save some or all Questions");
+                operationResult.AddResultWithError(false, ActionSavingResult<Conversation, Question>(), -1, null);
+                return operationResult;
+            }
+
+            _logger.LogInformation("Successfully saved {Count} Questions", allQuestions.Count);
+        }
+        else if (newConversations.Count == 0)
+        {
+            _logger.LogInformation("All conversations already exist and no new questions to save");
+        }
+
+        operationResult.AddResult(true);
         return operationResult;
     }
 }

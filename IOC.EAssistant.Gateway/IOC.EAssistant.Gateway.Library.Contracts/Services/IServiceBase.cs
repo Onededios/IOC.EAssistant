@@ -24,7 +24,7 @@ public interface IServiceBase<T>
     /// This method returns null in the Result property if the entity doesn't exist,
     /// rather than adding an error to the operation result.
     /// </remarks>
-    public Task<OperationResult<T?>> GetAsync(Guid id);
+    public Task<OperationResult<T>> GetAsync(Guid id);
 
     /// <summary>
     /// Saves a single entity to the data store.

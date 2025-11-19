@@ -1,5 +1,4 @@
-﻿using IOC.EAssistant.Gateway.XCutting.Result;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
 namespace IOC.EAssistant.Gateway.XCutting.Results;

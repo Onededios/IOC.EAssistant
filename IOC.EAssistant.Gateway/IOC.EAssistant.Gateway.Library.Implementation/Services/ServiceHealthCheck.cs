@@ -35,6 +35,8 @@ public class ServiceHealthCheck(
     /// </list>
     /// Returns errors if the health check fails or the model is unavailable.
     /// </returns>
+    /// <exception cref="HttpRequestException">Thrown when communication with the AI model health endpoint fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when health check operations time out.</exception>
     /// <remarks>
     /// <para>
     /// This method delegates to <see cref="GetModelHealthAsync"/> to verify the AI model status
@@ -49,34 +51,27 @@ public class ServiceHealthCheck(
     /// <item><description>DevOps dashboards for system status visualization</description></item>
     /// </list>
     /// </para>
+    /// <para>
+    /// Business logic errors (model unavailability) are captured in the operation result.
+    /// Infrastructure exceptions (network failures, timeouts) are allowed to propagate to
+    /// exception middleware for proper error handling and logging.
+    /// </para>
     /// </remarks>
     public async Task<OperationResult<HealthResponse>> GetHealthAsync()
     {
         var operationResult = new OperationResult<HealthResponse>();
 
-        try
+        var eassistantRes = await GetModelHealthAsync();
+
+        if (eassistantRes.HasErrors)
         {
-            var eassistantRes = await GetModelHealthAsync();
-
-            if (eassistantRes.HasErrors)
-            {
-                operationResult.AddErrors(eassistantRes.Errors);
-                return operationResult;
-            }
-
-            var health = new HealthResponse { ModelAvailable = eassistantRes.Result };
-
-            _logger.LogInformation("Variable ConnStr has been loaded? {ConnStrLoaded}", _configuration["EASSISTANT_CONNSTR"] != null);
-            _logger.LogInformation("Variable Uri has been loaded? {UriLoaded}", _configuration["EASSISTANT_URI"] != null);
-            _logger.LogInformation("Variable Loki has been loaded? {LokiLoaded}", _configuration["LOKI_URL"] != null && _configuration["LOKI_USERNAME"] != null && _configuration["LOKI_PASSWORD"] != null);
-
-            operationResult.AddResult(health);
+            operationResult.AddErrors(eassistantRes.Errors);
+            return operationResult;
         }
-        catch (Exception ex)
-        {
-            operationResult.AddError(new ErrorResult("Error performing health check", "Health"), ex);
-            _logger.LogError(ex, "Error performing health check");
-        }
+
+        var health = new HealthResponse { ModelAvailable = eassistantRes.Result };
+
+        operationResult.AddResult(health);
 
         return operationResult;
     }
@@ -91,6 +86,9 @@ public class ServiceHealthCheck(
     /// <item><description>false with error details if the model is unavailable or unhealthy</description></item>
     /// </list>
     /// </returns>
+    /// <exception cref="HttpRequestException">Thrown when communication with the AI model fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when the health check times out.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the health response cannot be parsed.</exception>
     /// <remarks>
     /// <para>
     /// This method communicates with the AI model's health endpoint through the proxy layer
@@ -103,24 +101,19 @@ public class ServiceHealthCheck(
     /// and preventing unnecessary processing.
     /// </para>
     /// <para>
-    /// Any exceptions during communication (network issues, timeouts, etc.) are caught
-    /// and returned as errors in the operation result, ensuring graceful degradation.
+    /// Infrastructure exceptions (network issues, timeouts, etc.) are allowed to propagate
+    /// to exception middleware for proper error handling, ensuring graceful degradation
+    /// and consistent error responses.
     /// </para>
     /// </remarks>
     public async Task<OperationResult<bool>> GetModelHealthAsync()
     {
         var operationResult = new OperationResult<bool>();
-        try
-        {
-            var healthResponse = await _proxyEAssistant.HealthCheckAsync();
-            var isHealthy = healthResponse.Status == "healthy";
-            operationResult.AddResult(isHealthy);
-        }
-        catch (Exception ex)
-        {
-            operationResult.AddError(new ErrorResult("Error performing health check", "Model API Health"), ex);
-            _logger.LogError(ex, "Error performing health check on EAssistant proxy");
-        }
+
+        var healthResponse = await _proxyEAssistant.HealthCheckAsync();
+        var isHealthy = healthResponse.Status == "healthy";
+        operationResult.AddResult(isHealthy);
+
         return operationResult;
     }
 }

@@ -60,6 +60,9 @@ public class ServiceChat(
     /// <item><description>Session and conversation identifiers</description></item>
     /// </list>
     /// </returns>
+    /// <exception cref="InvalidOperationException">Thrown when model response is invalid or conversation persistence fails.</exception>
+    /// <exception cref="HttpRequestException">Thrown when communication with the AI model fails.</exception>
+    /// <exception cref="TimeoutException">Thrown when database or AI model operations time out.</exception>
     /// <remarks>
     /// <para>
     /// This method executes the following workflow:
@@ -79,61 +82,56 @@ public class ServiceChat(
     /// - For existing conversations: Retrieves and appends to the conversation history
     /// </para>
     /// <para>
-    /// All validation errors, model unavailability, persistence failures, and exceptions
-    /// are captured in the operation result's error collection.
+    /// Validation errors and business logic errors (model unavailability, persistence failures)
+    /// are captured in the operation result's error collection. Infrastructure exceptions
+    /// (network failures, database timeouts) are allowed to propagate to be handled by
+    /// exception middleware for proper error responses and logging.
     /// </para>
     /// </remarks>
     public async Task<OperationResult<ChatResponseDto>> ChatAsync(ChatRequestDto request)
     {
         var operationResult = new OperationResult<ChatResponseDto>();
-        try
+
+        var validationErrors = _validatorChat.ValidateRequest(request);
+        if (validationErrors.Any())
         {
-            var validationErrors = _validatorChat.ValidateRequest(request);
-            if (validationErrors.Any())
-            {
-                operationResult.AddErrors(validationErrors);
-                return operationResult;
-            }
-
-            var healthCheckResult = await _serviceHealthCheck.GetModelHealthAsync();
-            if (!healthCheckResult.Result)
-            {
-                operationResult.AddError(new ErrorResult("EAssistant API is not available", "Model"));
-                _logger.LogError("EAssistant model API is not healthy");
-                return operationResult;
-            }
-
-            var (conversation, messages, isExistingConversation) = await PrepareConversationContextAsync(request);
-
-            var modelResponse = await GetModelResponseAsync(request);
-
-            if (modelResponse.HasErrors)
-            {
-                operationResult.AddErrors(modelResponse.Errors);
-                return operationResult;
-            }
-
-            var modelResult = modelResponse.Result!;
-
-            var question = ChatMapper.CreateQuestionEntity(messages.Last(), modelResult, conversation.Id);
-
-            conversation.Questions.Add(question);
-
-            var persistResult = await PersistConversation(conversation, isExistingConversation);
-
-            if (persistResult.HasErrors)
-            {
-                operationResult.AddErrors(persistResult.Errors);
-                return operationResult;
-            }
-
-            operationResult.AddResult(ChatMapper.MapToResponseDto(modelResult, conversation.IdSession, conversation.Id));
+            operationResult.AddErrors(validationErrors);
+            return operationResult;
         }
-        catch (Exception ex)
+
+        var healthCheckResult = await _serviceHealthCheck.GetModelHealthAsync();
+        if (!healthCheckResult.Result)
         {
-            operationResult.AddError(new ErrorResult("Error occurred while processing chat request", "Chat Processing"), ex);
-            _logger.LogError(ex, "Error occurred while processing chat request");
+            operationResult.AddError(new ErrorResult("EAssistant API is not available", "Model"));
+            _logger.LogError("EAssistant model API is not healthy");
+            return operationResult;
         }
+
+        var (conversation, messages, isExistingConversation) = await PrepareConversationContextAsync(request);
+
+        var modelResponse = await GetModelResponseAsync(request);
+
+        if (modelResponse.HasErrors)
+        {
+            operationResult.AddErrors(modelResponse.Errors);
+            return operationResult;
+        }
+
+        var modelResult = modelResponse.Result!;
+
+        var question = ChatMapper.CreateQuestionEntity(messages.Last(), modelResult, conversation.Id);
+
+        conversation.Questions.Add(question);
+
+        var persistResult = await PersistConversation(conversation, isExistingConversation);
+
+        if (persistResult.HasErrors)
+        {
+            operationResult.AddErrors(persistResult.Errors);
+            return operationResult;
+        }
+
+        operationResult.AddResult(ChatMapper.MapToResponseDto(modelResult, conversation.IdSession, conversation.Id));
 
         return operationResult;
     }
@@ -300,8 +298,8 @@ public class ServiceChat(
     /// </para>
     /// </remarks>
     private async Task<OperationResult<bool>> PersistConversation(
-      Conversation conversation,
-    bool isExistingConversation
+        Conversation conversation,
+        bool isExistingConversation
     )
     {
         if (isExistingConversation)

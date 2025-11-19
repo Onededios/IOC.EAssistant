@@ -1,5 +1,6 @@
 ﻿using IOC.EAssistant.Gateway.Infrastructure.Contracts.Proxies;
 using IOC.EAssistant.Gateway.Infrastructure.Contracts.Proxies.EAssistant;
+using Microsoft.Extensions.Http;
 
 namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Proxies;
 
@@ -10,8 +11,10 @@ namespace IOC.EAssistant.Gateway.Infrastructure.Implementation.Proxies;
 /// This class implements the <see cref="IProxyEAssistant"/> interface and provides methods 
 /// for interacting with the EAssistant service, including chat operations and health checks.
 /// It inherits from <see cref="Proxy"/> to leverage common HTTP communication functionality.
+/// Uses <see cref="IHttpClientFactory"/> for efficient HTTP client management.
 /// </remarks>
-public class ProxyEAssistant(string? baseUri) : Proxy(baseUri), IProxyEAssistant
+public class ProxyEAssistant(string? baseUri, IHttpClientFactory httpClientFactory) 
+    : Proxy(baseUri, httpClientFactory), IProxyEAssistant
 {
     /// <summary>
     /// Sends a chat request to the EAssistant service and returns the response.
