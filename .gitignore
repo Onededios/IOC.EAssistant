@@ -52,3 +52,16 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+/.vs
+/IOC.EAssistant.Gateway/.vs/IOC.EAssistant.Gateway/config/applicationhost.config
+/IOC.EAssistant.Gateway/.vs/IOC.EAssistant.Gateway/copilot-chat/df3a7e31/sessions
+/IOC.EAssistant.Gateway/.vs/IOC.EAssistant.Gateway/copilot-chat/df3a7e31/sessions/1501e344-a5a8-45e6-a262-abd60299297b
+/IOC.EAssistant.Gateway/.vs/IOC.EAssistant.Gateway/CopilotIndices
+/IOC.EAssistant.Gateway/.vs/IOC.EAssistant.Gateway
+*.user
+/IOC.EAssistant.Gateway/.vs/ProjectEvaluation
+/IOC.EAssistant.Gateway/.vs/CopilotSnapshots
+/IOC.EAssistant.Gateway/docker-compose.secrets.yml
+/IOC.EAssistant.Gateway/docker-compose.yml
+/IOC.EAssistant.Gateway/DOCKER-DEPLOYMENT.md
+/IOC.EAssistant.Gateway/QUICK-START.md

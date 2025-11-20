@@ -1,0 +1,47 @@
+﻿# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy solution and project files
+COPY ["IOC.EAssistant.Gateway.Api/IOC.EAssistant.Gateway.Api.csproj", "IOC.EAssistant.Gateway.Api/"]
+COPY ["IOC.EAssistant.Gateway.Infrastructure.Implementation/IOC.EAssistant.Gateway.Infrastructure.Implementation.csproj", "IOC.EAssistant.Gateway.Infrastructure.Implementation/"]
+COPY ["IOC.EAssistant.Gateway.Infrastructure.Contracts/IOC.EAssistant.Gateway.Infrastructure.Contracts.csproj", "IOC.EAssistant.Gateway.Infrastructure.Contracts/"]
+COPY ["IOC.EAssistant.Gateway.Library.Implementation/IOC.EAssistant.Gateway.Library.Implementation.csproj", "IOC.EAssistant.Gateway.Library.Implementation/"]
+COPY ["IOC.EAssistant.Gateway.Library.Contracts/IOC.EAssistant.Gateway.Library.Contracts.csproj", "IOC.EAssistant.Gateway.Library.Contracts/"]
+COPY ["IOC.EAssistant.Gateway.Library.Entities/IOC.EAssistant.Gateway.Library.Entities.csproj", "IOC.EAssistant.Gateway.Library.Entities/"]
+COPY ["IOC.EAssistant.Gateway.XCutting.Logging/IOC.EAssistant.Gateway.XCutting.Logging.csproj", "IOC.EAssistant.Gateway.XCutting.Logging/"]
+COPY ["IOC.EAssistant.Gateway.XCutting.Result/IOC.EAssistant.Gateway.XCutting.Result.csproj", "IOC.EAssistant.Gateway.XCutting.Result/"]
+
+RUN dotnet restore "IOC.EAssistant.Gateway.Api/IOC.EAssistant.Gateway.Api.csproj"
+
+COPY . .
+
+WORKDIR "/src/IOC.EAssistant.Gateway.Api"
+RUN dotnet build "IOC.EAssistant.Gateway.Api.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "IOC.EAssistant.Gateway.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+COPY --from=publish /app/publish .
+
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 8080
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["dotnet", "IOC.EAssistant.Gateway.Api.dll"]
