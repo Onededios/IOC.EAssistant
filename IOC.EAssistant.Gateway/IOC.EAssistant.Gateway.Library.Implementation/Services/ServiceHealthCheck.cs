@@ -20,8 +20,7 @@ namespace IOC.EAssistant.Gateway.Library.Implementation.Services;
 /// <param name="_proxyEAssistant">The proxy for communicating with the AI model service health endpoint.</param>
 public class ServiceHealthCheck(
     ILogger<ServiceHealthCheck> _logger,
-    IProxyEAssistant _proxyEAssistant,
-    IConfiguration _configuration
+    IProxyEAssistant _proxyEAssistant
 ) : IServiceHealthCheck
 {
     /// <summary>
