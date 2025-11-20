@@ -242,14 +242,14 @@ public class ServiceAnswerUnitTests
     {
         // Arrange
         var questionId = Guid.NewGuid();
-        var answers = AnswerTestHelper.CreateAnswersWithVariedTokenCounts(questionId, 100, 1, 100);
+        var answers = AnswerTestHelper.CreateAnswersWithVariedTokenCounts(questionId, 100, 50, 100);
 
         foreach (var answer in answers)
         {
             _mockRepository.Setup(r => r.GetAsync(answer.Id)).ReturnsAsync((Answer?)null);
         }
-        _mockRepository.Setup(r => r.SaveMultipleAsync(It.Is<IEnumerable<Answer>>(a => a.Count() == 100)))
-            .ReturnsAsync(100);
+
+        _mockRepository.Setup(r => r.SaveMultipleAsync(It.Is<IEnumerable<Answer>>(a => a.Count() == 100))).ReturnsAsync(100);
 
         // Act
         var result = await _service.SaveMultipleAsync(answers);

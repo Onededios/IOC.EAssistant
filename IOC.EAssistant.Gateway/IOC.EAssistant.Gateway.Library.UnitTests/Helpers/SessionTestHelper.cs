@@ -36,7 +36,7 @@ public static class SessionTestHelper
     public static List<Session> CreateMultipleSessions(
         int sessionCount = 3,
         int conversationsPerSession = 2,
-     int questionsPerConversation = 1
+        int questionsPerConversation = 1
     ) => Enumerable.Range(1, sessionCount)
         .Select(_ => CreateSessionWithConversations(
             Guid.NewGuid(),
@@ -119,7 +119,7 @@ public static class SessionTestHelper
 
     public static Session CreateSessionWithSequentialQuestions(
         Guid sessionId,
-      int conversationCount = 3,
+        int conversationCount = 3,
         int questionsPerConversation = 3
     ) => new()
     {
