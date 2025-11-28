@@ -125,8 +125,8 @@ The system supports two model providers:
 python app.py
 ```
 
-The server will start on `http://localhost:8000` and provide:
-- **Swagger UI**: `http://localhost:8000/apidocs/` for interactive API documentation
+The server will start on `http://localhost:8080` and provide:
+- **Swagger UI**: `http://localhost:8080/apidocs/` for interactive API documentation
 - **RESTful API**: Endpoints for RAG-powered chat with conversation history
 
 #### API Endpoints
@@ -139,7 +139,7 @@ Check if the service is running and get model information.
 
 **Example:**
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8080/health
 ```
 
 **Response:**
