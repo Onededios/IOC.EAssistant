@@ -147,9 +147,9 @@ class RAGAgent:
                         k=k,
                         filter={"type": "general"},
                     )
-                    # For some backends higher score is better; if None, keep the doc
+                    # For ChromaDB, lower distance scores are better (0 = identical)
                     retrieved_docs = [
-                        doc for doc, score in with_scores if (score is None or score >= score_threshold)
+                        doc for doc, score in with_scores if (score is None or score <= score_threshold)
                     ]
             except Exception:
                 # Fallback to basic similarity search
@@ -189,8 +189,9 @@ class RAGAgent:
                         k=k,
                         filter={"type": "noticia"},
                     )
+                    # For ChromaDB, lower distance scores are better (0 = identical)
                     retrieved_docs = [
-                        doc for doc, score in with_scores if (score is None or score >= score_threshold)
+                        doc for doc, score in with_scores if (score is None or score <= score_threshold)
                     ]
             except Exception:
                 retrieved_docs = vector_store.similarity_search(
@@ -266,6 +267,77 @@ class RAGAgent:
             print("Agent mode not supported, langchain version may be outdated.")
             self.use_agent = False
 
+    # ---------------------------- Helper methods ----------------------------
+    def _fallback_retrieval(self, question: str, verbose: bool = True) -> list:
+        """
+        Fallback retrieval method using diversified retrieval across both document types.
+        
+        Args:
+            question: The question to search for
+            verbose: Whether to print debug information
+            
+        Returns:
+            List of retrieved documents
+        """
+        ctx_docs = []
+        try:
+            ctx_docs += self.vector_store.max_marginal_relevance_search(
+                question,
+                k=self.k_results,
+                fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
+                filter={"type": "general"},
+            )
+        except Exception:
+            ctx_docs += self.vector_store.similarity_search(
+                question, k=self.k_results
+            )
+        try:
+            ctx_docs += self.vector_store.max_marginal_relevance_search(
+                question,
+                k=self.k_results,
+                fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
+                filter={"type": "noticia"},
+            )
+        except Exception as e:
+            if verbose:
+                print(f"Noticia MMR search failed, skipping: {e}")
+        
+        return ctx_docs
+
+    def _create_llm_with_temperature(self, temperature: float):
+        """
+        Create a new LLM instance with the specified temperature.
+        This is thread-safe compared to modifying the LLM's temperature attribute.
+        
+        Args:
+            temperature: The temperature to use for the new LLM instance
+            
+        Returns:
+            A new LLM instance with the specified temperature
+        """
+        if self.provider == "openai":
+            api_key = os.getenv("OPENAI_API_KEY")
+            return ChatOpenAI(
+                model=self.llm.model_name,
+                temperature=temperature,
+                openai_api_key=api_key,
+            )
+        elif self.provider == "ollama":
+            try:
+                import torch
+                num_gpu_param = -1 if torch.cuda.is_available() else 0
+            except Exception:
+                num_gpu_param = 0
+            return ChatOllama(
+                model=self.llm.model,
+                temperature=temperature,
+                num_gpu=num_gpu_param,
+                num_ctx=getattr(self.llm, 'num_ctx', 8192),
+            )
+        else:
+            # Fallback to the existing LLM if provider is unknown
+            return self.llm
+
     # ---------------------------- Query path -------------------------------
     def query(self, question: str, verbose: bool = True) -> str:
         """
@@ -281,28 +353,8 @@ class RAGAgent:
             if verbose:
                 print(f"Agent invocation failed, using simple RAG fallback: {e}")
 
-            # Simple RAG fallback: attempt diversified retrieval across both types
-            ctx_docs = []
-            try:
-                ctx_docs += self.vector_store.max_marginal_relevance_search(
-                    question,
-                    k=self.k_results,
-                    fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
-                    filter={"type": "general"},
-                )
-            except Exception:
-                ctx_docs += self.vector_store.similarity_search(
-                    question, k=self.k_results
-                )
-            try:
-                ctx_docs += self.vector_store.max_marginal_relevance_search(
-                    question,
-                    k=self.k_results,
-                    fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
-                    filter={"type": "noticia"},
-                )
-            except Exception as e:
-                print(f"Noticia MMR search failed, skipping: {e}")
+            # Use the helper method for fallback retrieval
+            ctx_docs = self._fallback_retrieval(question, verbose)
 
             context_blob = "\n\n".join(
                 [f"Source: {d.metadata}\nContent: {d.page_content}" for d in ctx_docs]
@@ -343,11 +395,8 @@ class RAGAgent:
         # Current question
         messages.append(HumanMessage(content=question))
         
-        # Temporarily override temperature if provided
-        original_temp = None
-        if temperature is not None:
-            original_temp = self.llm.temperature
-            self.llm.temperature = temperature
+        # Create a new LLM with custom temperature if provided (thread-safe)
+        llm_to_use = self._create_llm_with_temperature(temperature) if temperature is not None else self.llm
         
         try:
             response = self.agent.invoke({"messages": messages})
@@ -356,30 +405,8 @@ class RAGAgent:
             if verbose:
                 print(f"Agent invocation failed, using simple RAG fallback: {e}")
             
-            # Simple RAG fallback: attempt diversified retrieval across both types
-            ctx_docs = []
-            try:
-                ctx_docs += self.vector_store.max_marginal_relevance_search(
-                    question,
-                    k=self.k_results,
-                    fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
-                    filter={"type": "general"},
-                )
-            except Exception:
-                ctx_docs += self.vector_store.similarity_search(
-                    question, k=self.k_results
-                )
-            try:
-                ctx_docs += self.vector_store.max_marginal_relevance_search(
-                    question,
-                    k=self.k_results,
-                    fetch_k=max(20, self.k_results * self.fetch_k_multiplier),
-                    filter={"type": "noticia"},
-                )
-            except Exception:
-                # Failure to retrieve "noticia" type documents is non-fatal;
-                # fallback will proceed with whatever documents were retrieved.
-                pass
+            # Use the helper method for fallback retrieval
+            ctx_docs = self._fallback_retrieval(question, verbose)
             
             context_blob = "\n\n".join(
                 [f"Source: {d.metadata}\nContent: {d.page_content}" for d in ctx_docs]
@@ -387,11 +414,7 @@ class RAGAgent:
             
             # Build simple prompt with context
             prompt = f"Context:\n{context_blob}\n\nQuestion: {question}\n\nAnswer:"
-            response_text = self.llm.invoke(prompt).content
-        finally:
-            # Restore original temperature if it was overridden
-            if original_temp is not None:
-                self.llm.temperature = original_temp
+            response_text = llm_to_use.invoke(prompt).content
         
         return response_text
 

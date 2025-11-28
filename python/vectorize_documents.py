@@ -197,8 +197,8 @@ def vectorize_and_persist(
     
     # Use optimized text splitter with separators that respect document structure
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=700,
-        chunk_overlap=120,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
     

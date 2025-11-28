@@ -4,8 +4,8 @@ from rag_agent import RAGAgent
 import os
 import sys
 import subprocess
-import asyncio
 from datetime import datetime
+import tiktoken
 
 # --- Flask + Swagger setup ---
 app = Flask(__name__)
@@ -32,24 +32,28 @@ def check_and_setup_data():
     # If data doesn't exist, run crawler
     if not data_exists:
       print("crawling data...")
-      subprocess.run(
+      result = subprocess.run(
           [sys.executable, "crawler.py"],
           cwd=os.path.dirname(os.path.abspath(__file__)),
           capture_output=True,
           text=True,
           timeout=600  # 10 minutes timeout
       )
+      if result.returncode != 0:
+          print(f"Error running crawler.py: {result.stderr}", file=sys.stderr)
     
     # If ChromaDB doesn't exist, run vectorize_documents
     if not chroma_db_exists:
       print("vectorizing documents...")
-      subprocess.run(
+      result = subprocess.run(
           [sys.executable, "vectorize_documents.py"],
           cwd=os.path.dirname(os.path.abspath(__file__)),
           capture_output=True,
           text=True,
           timeout=600  # 10 minutes timeout
       )
+      if result.returncode != 0:
+          print(f"Error running vectorize_documents.py: {result.stderr}", file=sys.stderr)
 
 # --- Check and setup data before initializing RAG Agent ---
 print("Checking prerequisites...")
@@ -172,13 +176,29 @@ def chat():
               type: string
     """
     try:
-        data = request.get_json(force=True)
+        if not request.is_json:
+            return jsonify({"error": "Content-Type must be application/json"}), 400
+        data = request.get_json()
         messages = data.get("messages", [])
         model_config = data.get("modelConfig", {})
-        metadata = data.get("metadata", {})
 
         if not messages:
             return jsonify({"error": "messages field required"}), 400
+        
+        # Input validation: limit conversation history length to prevent abuse
+        MAX_MESSAGES = 50
+        MAX_CONTENT_LENGTH = 100000  # 100KB total content
+        
+        if len(messages) > MAX_MESSAGES:
+            return jsonify({"error": f"Maximum {MAX_MESSAGES} messages allowed in conversation history"}), 400
+        
+        # Calculate total content length
+        total_content = sum(
+            len(msg.get("question", "")) + len(msg.get("answer", ""))
+            for msg in messages
+        )
+        if total_content > MAX_CONTENT_LENGTH:
+            return jsonify({"error": f"Total content length exceeds {MAX_CONTENT_LENGTH} characters"}), 400
         
         # Get the last message (current question)
         last_message = messages[-1]
@@ -209,9 +229,16 @@ def chat():
         end_time = datetime.now()
         processing_time = int((end_time - start_time).total_seconds() * 1000)
         
-        # Estimate token usage (rough approximation)
-        prompt_tokens = sum(len(q.split()) + len(a.split()) for q, a in conversation_history) + len(current_question.split())
-        completion_tokens = len(answer.split())
+        # Use tiktoken for accurate token counting
+        try:
+            encoding = tiktoken.encoding_for_model("gpt-4")
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
+        
+        # Calculate prompt tokens from conversation history and current question
+        prompt_text = "".join(q + a for q, a in conversation_history) + current_question
+        prompt_tokens = len(encoding.encode(prompt_text))
+        completion_tokens = len(encoding.encode(answer))
         total_tokens = prompt_tokens + completion_tokens
         
         # Return response in the expected format

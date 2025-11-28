@@ -8,7 +8,7 @@ This module contains the Python components for the IOC.EAssistant project, inclu
 - Python 3.7 or higher
 - pip package manager
 
-### Install requiments
+### Install requirements
 
 ```bash
 cd python
@@ -122,11 +122,11 @@ The system supports two model providers:
 
 ```bash
 # Start the web server
-python web.py
+python app.py
 ```
 
-The server will start on `http://localhost:8000` and provide:
-- **Swagger UI**: `http://localhost:8000/apidocs/` for interactive API documentation
+The server will start on `http://localhost:8080` and provide:
+- **Swagger UI**: `http://localhost:8080/apidocs/` for interactive API documentation
 - **RESTful API**: Endpoints for RAG-powered chat with conversation history
 
 #### API Endpoints
@@ -139,7 +139,7 @@ Check if the service is running and get model information.
 
 **Example:**
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8080/health
 ```
 
 **Response:**
@@ -253,7 +253,7 @@ python/
 ├── rag_agent.py               # RAG Agent with LangChain (stateless)
 ├── utils.py                   # Utility functions (GPU config, formatting)
 ├── vectorize_documents.py     # Document vectorization script
-├── web.py                     # Flask API server (stateless)
+├── app.py                     # Flask API server (stateless)
 ├── requirements.txt           # Python dependencies
 ├── README.md                  # This file
 ├── data/                      # Crawled data storage (JSON files)

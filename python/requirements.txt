@@ -16,5 +16,6 @@ jq===1.10.0
 langchain-ollama==1.0.0
 langchain-openai==1.0.2
 openai==2.7.2
+tiktoken==0.7.0
 duckduckgo-search==8.1.1
 waitress==3.0.2
