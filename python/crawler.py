@@ -158,13 +158,13 @@ class WebCrawler:
         
         return noticias_urls
     
-    async def extract_page_content(self, page):
+    async def extract_page_content(self, page_url):
         self.logger.send_log(
-            message=f"Starting content extraction for page: {page}",
+            message=f"Starting content extraction for page: {page_url}",
             labels={"job": "web_crawler", "event": "page_content_extraction"}
         )
         
-        await self.page.goto(page)
+        await self.page.goto(page_url)
         title = await self.page.query_selector('h1')
         content = await self.page.query_selector('#main-box')
         
@@ -174,11 +174,11 @@ class WebCrawler:
         page_data = {
             "title": title_text,
             "content": content_text,
-            "type": "noticia" if "latest-news" in page else "general",
+            "type": "noticia" if "latest-news" in page_url else "general",
         }
         
         os.makedirs("data", exist_ok=True)
-        filename = os.path.join("data", f"{page.replace('/', '_').replace(':', '')}.json")
+        filename = os.path.join("data", f"{page_url.replace('/', '_').replace(':', '')}.json")
         
         try:
             with open(filename, "w", encoding="utf-8") as f:
