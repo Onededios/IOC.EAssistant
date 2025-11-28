@@ -190,7 +190,7 @@ class RAGAgent:
                         filter={"type": "noticia"},
                     )
                     retrieved_docs = [
-                        doc for doc, score in with_scores if (score is None or score >= score_threshold)
+                        doc for doc, score in with_scores if (score is None or score <= score_threshold)
                     ]
             except Exception:
                 retrieved_docs = vector_store.similarity_search(
