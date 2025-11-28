@@ -4,7 +4,6 @@ from rag_agent import RAGAgent
 import os
 import sys
 import subprocess
-import asyncio
 from datetime import datetime
 
 # --- Flask + Swagger setup ---
