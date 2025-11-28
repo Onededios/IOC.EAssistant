@@ -122,7 +122,7 @@ The system supports two model providers:
 
 ```bash
 # Start the web server
-python web.py
+python app.py
 ```
 
 The server will start on `http://localhost:8000` and provide:
