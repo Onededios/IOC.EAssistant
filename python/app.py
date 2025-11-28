@@ -10,6 +10,10 @@ from datetime import datetime
 app = Flask(__name__)
 swagger = Swagger(app)
 
+# --- Input validation limits ---
+MAX_MESSAGES = int(os.getenv("MAX_MESSAGES", "50"))  # Maximum number of messages in history
+MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", "100000"))  # Maximum total content length in characters
+
 
 def check_and_setup_data():
     """
@@ -182,6 +186,24 @@ def chat():
 
         if not messages:
             return jsonify({"error": "messages field required"}), 400
+        
+        # Validate message count limit
+        if len(messages) > MAX_MESSAGES:
+            return jsonify({
+                "error": f"Too many messages. Maximum allowed is {MAX_MESSAGES}."
+            }), 400
+        
+        # Validate total content length
+        total_content_length = 0
+        for msg in messages:
+            question = msg.get("question", "") or ""
+            answer = msg.get("answer", "") or ""
+            total_content_length += len(question) + len(answer)
+        
+        if total_content_length > MAX_CONTENT_LENGTH:
+            return jsonify({
+                "error": f"Content too long. Maximum allowed is {MAX_CONTENT_LENGTH} characters."
+            }), 400
         
         # Get the last message (current question)
         last_message = messages[-1]
