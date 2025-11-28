@@ -32,24 +32,28 @@ def check_and_setup_data():
     # If data doesn't exist, run crawler
     if not data_exists:
       print("crawling data...")
-      subprocess.run(
+      result = subprocess.run(
           [sys.executable, "crawler.py"],
           cwd=os.path.dirname(os.path.abspath(__file__)),
           capture_output=True,
           text=True,
           timeout=600  # 10 minutes timeout
       )
+      if result.returncode != 0:
+          print(f"Error running crawler.py: {result.stderr}", file=sys.stderr)
     
     # If ChromaDB doesn't exist, run vectorize_documents
     if not chroma_db_exists:
       print("vectorizing documents...")
-      subprocess.run(
+      result = subprocess.run(
           [sys.executable, "vectorize_documents.py"],
           cwd=os.path.dirname(os.path.abspath(__file__)),
           capture_output=True,
           text=True,
           timeout=600  # 10 minutes timeout
       )
+      if result.returncode != 0:
+          print(f"Error running vectorize_documents.py: {result.stderr}", file=sys.stderr)
 
 # --- Check and setup data before initializing RAG Agent ---
 print("Checking prerequisites...")
