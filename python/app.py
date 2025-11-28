@@ -206,6 +206,8 @@ def chat():
             question = msg.get("question") or ""
             answer = msg.get("answer") or ""
             total_content_length += len(question) + len(answer)
+            if total_content_length > MAX_CONTENT_LENGTH:
+                break
         
         if total_content_length > MAX_CONTENT_LENGTH:
             return jsonify({
