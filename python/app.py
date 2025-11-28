@@ -178,7 +178,6 @@ def chat():
         data = request.get_json(force=True)
         messages = data.get("messages", [])
         model_config = data.get("modelConfig", {})
-        metadata = data.get("metadata", {})
 
         if not messages:
             return jsonify({"error": "messages field required"}), 400
