@@ -253,7 +253,7 @@ python/
 ├── rag_agent.py               # RAG Agent with LangChain (stateless)
 ├── utils.py                   # Utility functions (GPU config, formatting)
 ├── vectorize_documents.py     # Document vectorization script
-├── web.py                     # Flask API server (stateless)
+├── app.py                     # Flask API server (stateless)
 ├── requirements.txt           # Python dependencies
 ├── README.md                  # This file
 ├── data/                      # Crawled data storage (JSON files)
