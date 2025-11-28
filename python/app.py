@@ -11,8 +11,15 @@ app = Flask(__name__)
 swagger = Swagger(app)
 
 # --- Input validation limits ---
-MAX_MESSAGES = int(os.getenv("MAX_MESSAGES", "50"))  # Maximum number of messages in history
-MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", "100000"))  # Maximum total content length in characters
+def _safe_int_env(name: str, default: int) -> int:
+    """Safely parse an integer environment variable with fallback."""
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+MAX_MESSAGES = _safe_int_env("MAX_MESSAGES", 50)  # Maximum number of messages in history
+MAX_CONTENT_LENGTH = _safe_int_env("MAX_CONTENT_LENGTH", 100000)  # Maximum total content length in characters
 
 
 def check_and_setup_data():
@@ -196,8 +203,8 @@ def chat():
         # Validate total content length
         total_content_length = 0
         for msg in messages:
-            question = msg.get("question", "") or ""
-            answer = msg.get("answer", "") or ""
+            question = msg.get("question") or ""
+            answer = msg.get("answer") or ""
             total_content_length += len(question) + len(answer)
         
         if total_content_length > MAX_CONTENT_LENGTH:
