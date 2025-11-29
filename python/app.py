@@ -175,7 +175,9 @@ def chat():
               type: string
     """
     try:
-        data = request.get_json(force=True)
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON or missing Content-Type header"}), 400
         messages = data.get("messages", [])
         model_config = data.get("modelConfig", {})
 
