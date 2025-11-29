@@ -6,7 +6,6 @@ import sys
 import subprocess
 from datetime import datetime
 
-# --- Flask + Swagger setup ---
 app = Flask(__name__)
 swagger = Swagger(app)
 
@@ -19,16 +18,13 @@ def check_and_setup_data():
     data_dir = os.getenv("DATA_PATH", "./data")
     chroma_db_dir = os.getenv("CHROMA_DB_PATH", "./chroma_db")
     
-    # Check if data folder exists and has JSON files
     data_exists = False
     if os.path.exists(data_dir):
         json_files = [f for f in os.listdir(data_dir) if f.endswith('.json')]
         data_exists = len(json_files) > 0
     
-    # Check if ChromaDB exists
     chroma_db_exists = os.path.exists(chroma_db_dir) and os.path.exists(os.path.join(chroma_db_dir, "chroma.sqlite3"))
     
-    # If data doesn't exist, run crawler
     if not data_exists:
       print("crawling data...")
       result = subprocess.run(
@@ -36,12 +32,11 @@ def check_and_setup_data():
           cwd=os.path.dirname(os.path.abspath(__file__)),
           capture_output=True,
           text=True,
-          timeout=600  # 10 minutes timeout
+          timeout=600
       )
       if result.returncode != 0:
           print(f"Error running crawler.py: {result.stderr}", file=sys.stderr)
     
-    # If ChromaDB doesn't exist, run vectorize_documents
     if not chroma_db_exists:
       print("vectorizing documents...")
       result = subprocess.run(
@@ -49,20 +44,17 @@ def check_and_setup_data():
           cwd=os.path.dirname(os.path.abspath(__file__)),
           capture_output=True,
           text=True,
-          timeout=600  # 10 minutes timeout
+          timeout=600 
       )
       if result.returncode != 0:
           print(f"Error running vectorize_documents.py: {result.stderr}", file=sys.stderr)
 
-# --- Check and setup data before initializing RAG Agent ---
 print("Checking prerequisites...")
 check_and_setup_data()
 
-# --- Initialize RAG Agent ---
 print("Initializing RAG Agent...")
-provider = os.getenv("MODEL_PROVIDER", "openai")  # Default to openai
+provider = os.getenv("MODEL_PROVIDER", "openai") 
 
-# Set default models based on provider
 if provider.lower() == "openai":
     default_embedding = "text-embedding-3-small"
     default_llm = "gpt-4o-mini"
@@ -184,14 +176,12 @@ def chat():
         if not messages:
             return jsonify({"error": "messages field required"}), 400
         
-        # Get the last message (current question)
         last_message = messages[-1]
         current_question = last_message.get("question", "").strip()
         
         if not current_question:
             return jsonify({"error": "Last message must contain a question"}), 400
         
-        # Build conversation history from previous messages (excluding the last one)
         conversation_history = []
         for msg in messages[:-1]:
             question = msg.get("question", "")
@@ -199,10 +189,8 @@ def chat():
             if question and answer:
                 conversation_history.append((question, answer))
         
-        # Get temperature from modelConfig if provided
         temperature = model_config.get("temperature")
         
-        # Get answer from RAG agent with history
         start_time = datetime.now()
         answer = rag_agent.query_with_history(
             question=current_question,
@@ -213,12 +201,10 @@ def chat():
         end_time = datetime.now()
         processing_time = int((end_time - start_time).total_seconds() * 1000)
         
-        # Estimate token usage (rough approximation)
         prompt_tokens = sum(len(q.split()) + len(a.split()) for q, a in conversation_history) + len(current_question.split())
         completion_tokens = len(answer.split())
         total_tokens = prompt_tokens + completion_tokens
         
-        # Return response in the expected format
         return jsonify({
             "choices": [
                 {

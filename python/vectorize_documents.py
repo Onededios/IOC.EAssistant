@@ -17,10 +17,8 @@ from utils import configure_gpu_settings
 
 load_dotenv()
 
-# Get provider from environment
 PROVIDER = os.getenv("MODEL_PROVIDER", "openai").lower()
 
-# Configure GPU usage for Ollama (automatically falls back to CPU if no GPU available)
 if PROVIDER == "ollama":
     num_gpus = configure_gpu_settings(num_gpu=1, cuda_device=0)
 
@@ -32,25 +30,20 @@ def extract_metadata_from_filename(filename: str) -> dict:
     """
     metadata = {}
     
-    # Remove .json extension
     name = filename.replace('.json', '')
     
-    # Extract URL using regex and structured parsing
-    # Example filename: https__ioc.xtec.cat_educacio_20-latest-news_1111-adjudicacio-places-fp-curs-2022-23-semestre-1
     url_match = re.match(r'^https__([^.]+)\.([^.]+)\.([^.]+)_(.+?)(?:_\d+-.*)?$', name)
     if url_match:
         domain = f"{url_match.group(1)}.{url_match.group(2)}.{url_match.group(3)}"
         path = url_match.group(4).replace('_', '/')
         metadata['source_url'] = f"https://{domain}/{path}"
     else:
-        metadata['source_url'] = filename  # fallback: use filename if pattern doesn't match
+        metadata['source_url'] = filename
     
-    # Extract ID from filename (e.g., 1111)
     id_match = re.search(r'_(\d+)-', name)
     if id_match:
         metadata['article_id'] = id_match.group(1)
     
-    # Extract topic from filename
     topic_match = re.search(r'\d+-(.*?)$', name)
     if topic_match:
         topic = topic_match.group(1).replace('-', ' ').title()
@@ -63,7 +56,6 @@ def extract_metadata_from_filename(filename: str) -> dict:
 
 def extract_date_from_content(content: str) -> str:
     """Extract date from content if present"""
-    # Pattern: DILLUNS, 14 JUNY 2021 or similar
     date_patterns = [
         r'(\d{1,2}\s+(?:GENER|FEBRER|MARÇ|ABRIL|MAIG|JUNY|JULIOL|AGOST|SETEMBRE|OCTUBRE|NOVEMBRE|DESEMBRE)\s+\d{4})',
         r'(\d{1,2}/\d{1,2}/\d{4})',
@@ -80,7 +72,6 @@ def extract_date_from_content(content: str) -> str:
 
 def extract_category_from_content(content: str) -> str:
     """Extract category from content (e.g., NOTÍCIES, MATRÍCULES)"""
-    # Look for common categories in uppercase
     categories = ['NOTÍCIES', 'MATRÍCULES', 'BEQUES', 'CONVOCATÒRIES', 'PREINSCRIPCIÓ', 
                   'CALENDARI', 'EXÀMENS', 'FP', 'ESO', 'BATXILLERAT']
     
@@ -105,14 +96,11 @@ def load_documents(folder_path: str) -> List[Document]:
         file_path = os.path.join(folder_path, filename)
         
         try:
-            # Load JSON with proper encoding
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            # Extract base metadata from filename
             metadata = extract_metadata_from_filename(filename)
             
-            # Get title and content
             title = data.get('title', 'Sense títol')
             content = data.get('content', '')
             
@@ -120,26 +108,20 @@ def load_documents(folder_path: str) -> List[Document]:
                 print(f"Warning: Empty content in {filename}")
                 continue
             
-            # Add title to metadata
             metadata['title'] = title
             
-            # Add type from JSON (noticia or general)
             doc_type = data.get('type', 'general')
             metadata['type'] = doc_type
             
-            # Extract date from content
             date = extract_date_from_content(content)
             if date:
                 metadata['date'] = date
             
-            # Extract category
             category = extract_category_from_content(content)
             metadata['category'] = category
             
-            # Create enriched content with title
             enriched_content = f"Títol: {title}\n\n{content}"
             
-            # Create document with enriched metadata
             doc = Document(
                 page_content=enriched_content,
                 metadata=metadata
@@ -159,8 +141,8 @@ def vectorize_and_persist(
     data_folder: str = "./data",
     persist_directory: str = "./chroma_db",
     collection_name: str = "ioc_data",
-    chunk_size: int = 800,  # Reduced for better context
-    chunk_overlap: int = 150,  # Optimized overlap
+    chunk_size: int = 800, 
+    chunk_overlap: int = 150, 
     embedding_model: str = "nomic-embed-text"
 ):
     """
@@ -183,7 +165,6 @@ def vectorize_and_persist(
     
     print(f"Loaded {len(documents)} documents")
     
-    # Print sample metadata
     if documents:
         print("\nSample document metadata:")
         sample = documents[0]
@@ -195,7 +176,6 @@ def vectorize_and_persist(
     
     print(f"Splitting documents into chunks (size={chunk_size}, overlap={chunk_overlap})...")
     
-    # Use optimized text splitter with separators that respect document structure
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=700,
         chunk_overlap=120,
@@ -205,16 +185,13 @@ def vectorize_and_persist(
     split_docs = text_splitter.split_documents(documents)
     print(f"Created {len(split_docs)} chunks")
     
-    # Enhance chunk metadata with position information
     for i, doc in enumerate(split_docs):
         doc.metadata['chunk_id'] = i
-        # Add a summary field for better retrieval
         preview = doc.page_content[:200].replace('\n', ' ')
         doc.metadata['preview'] = preview
     
     print(f"Creating embeddings using {embedding_model} with provider {PROVIDER}...")
     
-    # Initialize embeddings based on provider
     if PROVIDER == "openai":
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -224,7 +201,6 @@ def vectorize_and_persist(
             openai_api_key=api_key,
         )
     elif PROVIDER == "ollama":
-        # Detect GPU availability
         try:
             import torch
             num_gpu_param = -1 if torch.cuda.is_available() else 0
@@ -233,14 +209,13 @@ def vectorize_and_persist(
         
         embeddings = OllamaEmbeddings(
             model=embedding_model,
-            num_gpu=num_gpu_param  # Use GPU if available, otherwise CPU
+            num_gpu=num_gpu_param
         )
     else:
         raise ValueError(f"Unsupported provider: {PROVIDER}. Choose 'ollama' or 'openai'")
     
     print(f"Persisting to ChromaDB at {persist_directory}...")
     
-    # Clear existing collection if it exists
     if os.path.exists(persist_directory):
         print("Existing database found. Creating new version...")
     
@@ -261,10 +236,8 @@ def vectorize_and_persist(
 
 
 if __name__ == "__main__":
-    # Get embedding model from environment
     embedding_model = os.getenv("EMBEDDING_MODEL")
     
-    # Set defaults based on provider if not specified
     if not embedding_model:
         if PROVIDER == "openai":
             embedding_model = "text-embedding-3-small"
@@ -274,6 +247,5 @@ if __name__ == "__main__":
     print(f"Using provider: {PROVIDER}")
     print(f"Using embedding model: {embedding_model}")
     
-    # Run the vectorization process
     vectorize_and_persist(embedding_model=embedding_model)
 
