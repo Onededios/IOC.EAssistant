@@ -172,7 +172,7 @@ def vectorize_and_persist(
         collection_name: Name of the ChromaDB collection
         chunk_size: Size of text chunks (optimized to 800)
         chunk_overlap: Overlap between chunks (optimized to 150)
-        embedding_model: Ollama embedding model to use
+        embedding_model: Name of embedding model (provider-specific: OpenAI or Ollama)
     """
     print(f"Loading documents from {data_folder}...")
     documents = load_documents(data_folder)
