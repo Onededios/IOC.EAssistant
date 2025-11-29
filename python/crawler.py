@@ -128,7 +128,7 @@ class WebCrawler:
         
         return unique_urls
     
-    async def get_noticias_urls(self, num=100):
+    async def get_noticias_urls(self, num=50):
         NUM_PER_PAGE = 3
         noticias_urls = []
         
@@ -173,7 +173,8 @@ class WebCrawler:
         
         page_data = {
             "title": title_text,
-            "content": content_text
+            "content": content_text,
+            "type": "noticia" if "latest-news" in page else "general",
         }
         
         os.makedirs("data", exist_ok=True)

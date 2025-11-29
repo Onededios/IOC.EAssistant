@@ -52,5 +52,8 @@ docs/_build/
 # Crawled data
 data/
 
+# Chroma database
+chroma_db/
+
 # Environment variables
 .env
